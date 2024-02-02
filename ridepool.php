@@ -31,8 +31,8 @@ if (!defined('WPINC')) {
     die;
 }
 
-require_once 'includes/autoloader.php';
 require_once 'includes/traits/trait-settings.php';
+require_once 'includes/autoloader.php';
 
 /**
  * Main class to bootstrap the plugin
@@ -89,7 +89,8 @@ class Ridepool
      */
     function start()
     {
-        register_activation_hook(__FILE__, array(__CLASS__, 'activate_sbu_wc_handout'));
+		Ridepool\Autoloader::run();
+        register_activation_hook(__FILE__, array(__CLASS__, 'activate'));
     }
 }
 Ridepool::start();

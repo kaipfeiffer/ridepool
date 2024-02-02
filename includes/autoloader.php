@@ -1,4 +1,5 @@
 <?php
+
 namespace Ridepool;
 
 if (!defined('WPINC')) {
@@ -13,9 +14,10 @@ if (!defined('WPINC')) {
  *
  * @since 1.0.0
  */
-class Autoloader {
+class Autoloader
+{
 
-    use Settings;
+	use Settings;
 
 	/**
 	 * Classes map.
@@ -29,6 +31,17 @@ class Autoloader {
 	 * @var array Classes used by elementor.
 	 */
 	private static $classes_map;
+
+	/**
+	 * Default namespace for autoloader.
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 * @static
+	 *
+	 * @var string
+	 */
+	private static $default_namespace;
 
 	/**
 	 * Default path for autoloader.
@@ -48,20 +61,25 @@ class Autoloader {
 	 * Register a function as `__autoload()` implementation.
 	 *
 	 * @access public
-     * 
+	 * 
 	 * @param string
-     * 
+	 * 
 	 * @since 1.0.0
 	 * @static
 	 */
-	public static function run( $default_path = '', $default_namespace = '' ) {
-		if ( '' === $default_path ) {
+	public static function run($default_path = '', $default_namespace = '')
+	{
+		if ('' === $default_path) {
 			$default_path = Settings::get_plugin_dir_path();
 		}
+		if ('' === $default_namespace) {
+			$default_namespace = Settings::get_plugin_name_space();
+		}
 
+		self::$default_namespace = $default_namespace;
 		self::$default_path = $default_path;
 
-		spl_autoload_register( [ __CLASS__, 'autoload' ] );
+		spl_autoload_register([__CLASS__, 'autoload']);
 	}
 
 	/**
@@ -70,19 +88,21 @@ class Autoloader {
 	 * retrieve the classes aliases names.
 	 *
 	 * @access public
-     * 
+	 * 
 	 * @return array
-     * 
+	 * 
 	 * @since 1.0.0
 	 * @static
 	 *
 	 */
-	public static function get_classes_map() {
-		if ( ! self::$classes_map ) {
-            self::$classes_map = array(
-                'Activator' => 'includes/class-activator.php',
+	public static function get_classes_map()
+	{
+		if (!self::$classes_map) {
+			self::$classes_map = array(
+				'Activator' => 'includes/class-activator.php',
 				'Deactivator' => 'includes/class--deactivator.php',
-            );
+				'Settings' => 'includes/traits/trait-settings.php',
+			);
 		}
 
 		return self::$classes_map;
@@ -99,14 +119,18 @@ class Autoloader {
 	 *
 	 * @param string
 	 */
-	private static function load_class( $relative_class_name ) {
+	private static function load_class($relative_class_name)
+	{
+		$filename		= '';
 		$classes_map = self::get_classes_map();
 
-		if ( isset( $classes_map[ $relative_class_name ] ) ) {
-			$filename = self::$default_path . '/' . $classes_map[ $relative_class_name ];
+		if (isset($classes_map[$relative_class_name])) {
+			$filename = self::$default_path . $classes_map[$relative_class_name];
 		}
+		error_log($relative_class_name.'->'. $filename);
 
-		if ( is_readable( $filename ) ) {
+		if (is_readable($filename)) {
+			error_log($relative_class_name.'->'. $filename);
 			require $filename;
 		}
 	}
@@ -122,10 +146,15 @@ class Autoloader {
 	 *
 	 * @param string
 	 */
-	private static function autoload( $class ) {
+	private static function autoload($class)
+	{
 
-		if ( ! class_exists( $class ) ) {
-			self::load_class( $class );
+		$relative_class_name = preg_replace('/^' . self::$default_namespace . '\\\/', '', $class);
+
+		$class_name = self::$default_namespace . '\\' . $relative_class_name;
+
+		if (!class_exists($class_name)) {
+			self::load_class($relative_class_name);
 		}
 	}
 }

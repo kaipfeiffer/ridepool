@@ -44,6 +44,16 @@ trait Settings
     static private $plugin_name     = 'ridepool';
 
     /**
+     * plugin name_space
+     * 
+     * @access private
+     * @since   1.0.0 
+     * @static
+     * @var     string 
+     */
+    static private $plugin_name_space     = 'Ridepool';
+
+    /**
      * plugin url
      * 
      * @access private
@@ -81,7 +91,7 @@ trait Settings
         if (!self::$plugin_dir_path) {
             $plugin_dir_path        = plugin_dir_path(__FILE__);
             error_log(__CLASS__.'->'.__LINE__.'->'.$plugin_dir_path);
-            $plugin_dir_path        = str_replace('include'.DIRECTORY_SEPARATOR.'traits'.DIRECTORY_SEPARATOR,'',$plugin_dir_path);
+            $plugin_dir_path        = str_replace('includes'.DIRECTORY_SEPARATOR.'traits'.DIRECTORY_SEPARATOR,'',$plugin_dir_path);
             error_log(__CLASS__.'->'.__LINE__.'->'.$plugin_dir_path);
             self::$plugin_dir_path  = $plugin_dir_path;
         }
@@ -99,6 +109,19 @@ trait Settings
     static function get_plugin_name()
     {
         return self::$plugin_name;
+    }
+
+    /**
+     * get_plugin_name_space
+     * 
+     * @access private
+     * @since   1.0.0 
+     * @static
+     * @return  string
+     */
+    static function get_plugin_name_space()
+    {
+        return self::$plugin_name_space;
     }
 
     /**
