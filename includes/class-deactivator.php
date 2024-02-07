@@ -1,6 +1,6 @@
 <?php
 
-namespace Ridepool;
+namespace Loworx\Ridepool;
 
 // If this file is called directly, abort.
 if (!defined('WPINC')) {
@@ -18,8 +18,6 @@ if (!defined('WPINC')) {
  */
 class Deactivator
 {
-    use Settings;
-
 	/**
 	 * activate
 	 *
@@ -31,6 +29,11 @@ class Deactivator
 	 */
 	public static function deactivate()
 	{
-        error_log(__CLASS__.'->'.__LINE__.'->'. Settings::get_plugin_dir_path());
+		$data	= array(
+			'Hallo' => 'Kai'
+		);
+		$jwt	= JWT_Singleton::get_instance();
+		$token	= $jwt->generate_jwt($data);
+        error_log(__CLASS__.'->'.__LINE__.'-> Deactivator'. $token);
     }
 }

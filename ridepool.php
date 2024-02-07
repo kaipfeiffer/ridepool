@@ -1,5 +1,7 @@
 <?php
 
+namespace Loworx;
+
 /**
  * The plugin bootstrap file
  *
@@ -31,8 +33,7 @@ if (!defined('WPINC')) {
     die;
 }
 
-require_once 'includes/traits/trait-settings.php';
-require_once 'includes/autoloader.php';
+require plugin_dir_path( __FILE__ ) . 'includes/class-ridepool-main.php';
 
 /**
  * Main class to bootstrap the plugin
@@ -87,10 +88,19 @@ class Ridepool
      * @since   1.0.0 
      * @static
      */
-    function start()
+    static function start()
     {
-		Ridepool\Autoloader::run();
         register_activation_hook(__FILE__, array(__CLASS__, 'activate'));
+        
+        register_deactivation_hook(__FILE__, array(__CLASS__, 'deactivate'));
+        
+		Ridepool\Ridepool_Main::run(array(
+            'plugin_dir_path'       => plugin_dir_path( __FILE__ ),
+            'plugin_name'           => 'pcm-flipbook',
+            'plugin_text_domain'    => 'pcm-flipbook',
+            'plugin_url'            => plugin_dir_url(__FILE__),
+            'plugin_version'        => '1.0.0',
+        ));
     }
 }
 Ridepool::start();
