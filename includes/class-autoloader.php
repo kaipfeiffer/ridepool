@@ -112,8 +112,14 @@ class Autoloader
 	{
 		if (!self::$classes_map) {
 			self::$classes_map = array(
-				'Activator'		=> 'includes' . DIRECTORY_SEPARATOR . 'class-activator.php',
-				'Deactivator'	=> 'includes' . DIRECTORY_SEPARATOR . 'class-deactivator.php',
+				'Activator'		=> implode(
+					DIRECTORY_SEPARATOR,
+					array('includes', 'class-activator.php')
+				),
+				'Deactivator'	=> implode(
+					DIRECTORY_SEPARATOR,
+					array('includes', 'class-deactivator.php')
+				),
 			);
 		}
 
@@ -135,22 +141,56 @@ class Autoloader
 	{
 		$file_name 			= str_replace('_', '-', strtolower($class_name));
 
+		// Controllers
+		if (str_ends_with($file_name, 'controller')) {
+			return self::$default_path . implode(
+				DIRECTORY_SEPARATOR,
+				array('includes', 'controllers', 'class-' . $file_name . '.php')
+			);
+		}
+		// Handlers
+		if (str_ends_with($file_name, 'handler')) {
+			// error_log(__CLASS__ . '->' . __LINE__ . '->' . $file_name.'->'.self::$default_path . '/includes/singletons/class-' . $file_name . '.php');
+			return self::$default_path . implode(
+				DIRECTORY_SEPARATOR,
+				array('includes', 'handlers', 'class-' . $file_name . '.php')
+			);
+		}
+		// Models
+		if (str_ends_with($file_name, 'model')) {
+			return self::$default_path . implode(
+				DIRECTORY_SEPARATOR,
+				array('includes', 'models', 'class-' . $file_name . '.php')
+			);
+		}
 		// Resources
 		if (str_ends_with($file_name, 'resource')) {
-			return self::$default_path . 'includes' . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'class-' . $file_name . '.php';
+			return self::$default_path . implode(
+				DIRECTORY_SEPARATOR,
+				array('includes', 'resources', 'class-' . $file_name . '.php')
+			);
 		}
 		// Singletons
 		if (str_ends_with($file_name, 'singleton')) {
 			// error_log(__CLASS__ . '->' . __LINE__ . '->' . $file_name.'->'.self::$default_path . '/includes/singletons/class-' . $file_name . '.php');
-			return self::$default_path . 'includes' . DIRECTORY_SEPARATOR . 'singletons' . DIRECTORY_SEPARATOR . 'class-' . $file_name . '.php';
+			return self::$default_path . implode(
+				DIRECTORY_SEPARATOR,
+				array('includes', 'singletons', 'class-' . $file_name . '.php')
+			);
 		}
 		// Tables
 		if (str_ends_with($file_name, 'table')) {
-			return self::$default_path . 'includes' . DIRECTORY_SEPARATOR . 'tables' . DIRECTORY_SEPARATOR . 'class-' . $file_name . '.php';
+			return self::$default_path . implode(
+				DIRECTORY_SEPARATOR,
+				array('includes', 'tables', 'class-' . $file_name . '.php')
+			);
 		}
 		// Traits
 		if (str_ends_with($file_name, 'trait')) {
-			return self::$default_path . 'includes' . DIRECTORY_SEPARATOR . 'traits' . DIRECTORY_SEPARATOR . 'class-' . $file_name . '.php';
+			return self::$default_path . implode(
+				DIRECTORY_SEPARATOR,
+				array('includes', 'traits', 'class-' . $file_name . '.php')
+			);
 		}
 	}
 
@@ -196,7 +236,7 @@ class Autoloader
 	private static function autoload($class)
 	{
 		// terminate method, if namespace doesn't match
-		if ( 0 !== strpos( $class, self::$default_namespace . '\\' ) ) {
+		if (0 !== strpos($class, self::$default_namespace . '\\')) {
 			return;
 		}
 		// error_log(__CLASS__.'->'.__LINE__.'->'.$regex);

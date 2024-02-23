@@ -13,9 +13,15 @@ if (!defined('ABSPATH')) {
  * @package ridepool
  * @since   1.0.0 
  */
-class JWT_Singleton
+class JWT_Handler
 {
-    use Singleton_Trait;
+    /**
+     * SECRET
+     * 
+     * Fallback-Secret, falls keine Daten aus der Wordpress-Installation ausgelesen werden können
+     */
+    const SECRET = 'W42#FIm%huEEQPNI%NZ4CVr&$BqAgFy5%8cmviGt';
+
 
     /**
      * $algorithm.
@@ -24,7 +30,7 @@ class JWT_Singleton
      * 
      * @since    1.0.0
      */
-    protected $algorithm = 'sha512';
+    protected static $algorithm = 'sha512';
 
 
     /**
@@ -46,7 +52,7 @@ class JWT_Singleton
      * 
      * @since    1.0.0
      */
-    protected $secret;
+    protected static $secret   = null;
 
 
     /**
@@ -70,7 +76,7 @@ class JWT_Singleton
      * 
      * @since    1.0.0
      */
-    protected $issuer;
+    protected static $issuer;
 
 
     /**
@@ -81,7 +87,7 @@ class JWT_Singleton
      * @param   string
      * @since    1.0.0
      */
-    protected function decode($data)
+    protected static function decode($data)
     {
         return base64_decode($data);
     }
@@ -95,7 +101,7 @@ class JWT_Singleton
      * @param   string
      * @since    1.0.0
      */
-    protected function encode($data)
+    protected static function encode($data)
     {
         // return base64_encode($data);
         // Das str_replace macht das Token URL-kompatibel
@@ -111,12 +117,12 @@ class JWT_Singleton
      * @return  string
      * @since    1.0.0
      */
-    protected function get_issuer()
+    protected static function get_issuer()
     {
-        if (!$this->issuer) {
-            $this->issuer = $_SERVER['SERVER_NAME'];
+        if (!static::$issuer) {
+            static::$issuer = $_SERVER['SERVER_NAME'];
         }
-        return $this->issuer;
+        return static::$issuer;
     }
 
 
@@ -129,18 +135,18 @@ class JWT_Singleton
      * @return  string
      * @since    1.0.0
      */
-    protected function get_secret()
+    protected static function get_secret()
     {
-        if (!$this->secret) {
+        if (!static::$secret) {
             if (defined('\SECURE_AUTH_SALT')) {
                 $secret = \SECURE_AUTH_SALT;
             }
             if (defined('\SECURE_AUTH_KEY')) {
                 $secret .= \SECURE_AUTH_KEY;
             }
-            $this->secret   = $secret;
+            static::$secret   = $secret ?? static::SECRET;
         }
-        return $this->secret;
+        return static::$secret;
     }
 
 
@@ -153,21 +159,21 @@ class JWT_Singleton
      * @param   integer die Gültigkeits-Dauer des Tokens, default 1 Tag
      * @since    1.0.0
      */
-    public function decode_jwt($jwt)
+    public static function decode_jwt($jwt)
     {
         $result     = null;
         list($base64UrlHeader, $base64UrlPayload, $base64UrlSignature)    = explode('.', $jwt);
 
-        $json_header     = $this->decode($base64UrlHeader);
-        $json_payload    = $this->decode($base64UrlPayload);
-        $signature       = $this->decode($base64UrlSignature);
+        $json_header     = static::decode($base64UrlHeader);
+        $json_payload    = static::decode($base64UrlPayload);
+        $signature       = static::decode($base64UrlSignature);
 
         if ($json_header && $header = json_decode($json_header)) {
-            $algorithm  = isset($header->alg) ? $header->alg : $this->algorithm;
+            $algorithm  = isset($header->alg) ? $header->alg : static::$algorithm;
         }
 
         // Schlüssel auslesen
-        $secret = $this->get_secret();
+        $secret = static::get_secret();
 
         if ($signature === hash_hmac($algorithm, $base64UrlHeader . '.' . $base64UrlPayload, $secret)) {
             $payload    = json_decode($json_payload);
@@ -189,40 +195,40 @@ class JWT_Singleton
      * @param   integer die Gültigkeits-Dauer des Tokens, default 1 Tag
      * @since    1.0.0
      */
-    public function generate_jwt($data, $validity = 60 * 60 * 24)
+    public static function generate_jwt($data, $validity = 60 * 60 * 24)
     {
         // Generierungsdatum
         $iat = time();
 
         $payload    = array(
             'data'  => $data,
-            'id'    => uniqid($this->issuer, true), // Unique ID
+            'id'    => uniqid(static::$issuer, true), // Unique ID
             'sub'   => 'SBU-Handout',                 // Subject
             'exp'   => $iat + $validity,            // Expiration date
-            'iss'   => $this->get_issuer(),         // issuer
+            'iss'   => static::get_issuer(),         // issuer
             'iat'   => $iat,                        // issued at
         );
 
         // Create token header as a JSON string
-        $json_header = json_encode(['typ' => 'JWT', 'alg' => $this->algorithm]);
+        $json_header = json_encode(['typ' => 'JWT', 'alg' => static::$algorithm]);
 
         // Create token payload as a JSON string
         $json_payload = json_encode($payload);
 
         // Encode Header to Base64Url String
-        $base64UrlHeader = $this->encode($json_header);
+        $base64UrlHeader = static::encode($json_header);
 
         // Encode Payload to Base64Url String
-        $base64UrlPayload = $this->encode($json_payload);
+        $base64UrlPayload = static::encode($json_payload);
 
         // Schlüssel auslesen
-        $secret = $this->get_secret();
+        $secret = static::get_secret();
 
         // Create Signature Hash
-        $signature = hash_hmac($this->algorithm, $base64UrlHeader . '.' . $base64UrlPayload, $secret);
+        $signature = hash_hmac(static::$algorithm, $base64UrlHeader . '.' . $base64UrlPayload, $secret);
 
         // Encode Signature to Base64Url String
-        $base64UrlSignature = $this->encode($signature);
+        $base64UrlSignature = static::encode($signature);
 
         // Create JWT
         $jwt = $base64UrlHeader . '.' . $base64UrlPayload . '.' . $base64UrlSignature;

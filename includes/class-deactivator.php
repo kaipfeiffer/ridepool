@@ -29,11 +29,5 @@ class Deactivator
 	 */
 	public static function deactivate()
 	{
-		$data	= array(
-			'Hallo' => 'Kai'
-		);
-		$jwt	= JWT_Singleton::get_instance();
-		$token	= $jwt->generate_jwt($data);
-        error_log(__CLASS__.'->'.__LINE__.'-> Deactivator'. $token);
     }
 }

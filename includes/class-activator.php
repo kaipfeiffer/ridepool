@@ -4,7 +4,7 @@ namespace Loworx\Ridepool;
 
 // If this file is called directly, abort.
 if (!defined('WPINC')) {
-    die;
+	die;
 }
 
 /**
@@ -23,18 +23,11 @@ class Activator
 	 *
 	 * wordpress activation hook
 	 *
-     * @access  public
-     * @since   1.0.0 
-     * @static
+	 * @access  public
+	 * @since   1.0.0 
+	 * @static
 	 */
 	public static function activate()
 	{
-        error_log(__CLASS__.'->'.__LINE__.'-> Activator'. Settings::get_plugin_dir_path());
-		$data	= array(
-			'Hallo' => 'Kai'
-		);
-		$jwt	= JWT_Singleton::get_instance();
-		$token	= $jwt->generate_jwt($data);
-        error_log(__CLASS__.'->'.__LINE__.'-> Activator'. $token);
-    }
+	}
 }
