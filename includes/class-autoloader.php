@@ -120,6 +120,10 @@ class Autoloader
 					DIRECTORY_SEPARATOR,
 					array('includes', 'class-deactivator.php')
 				),
+				'Sanitize'		=> implode(
+					DIRECTORY_SEPARATOR,
+					array('includes', 'helpers', 'class-sanitize-helper.php')
+				),
 			);
 		}
 
