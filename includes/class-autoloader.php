@@ -66,6 +66,17 @@ class Autoloader
 	 */
 	private static $default_path;
 
+	/**
+	 * Logger instance
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 * @static
+	 *
+	 * @var Logger_Singleton
+	 */
+	private static $logger;
+
 
 	/**
 	 * Run autoloader.
@@ -81,6 +92,7 @@ class Autoloader
 	 */
 	public static function run($default_path = '', $default_namespace = '')
 	{
+		self::$logger	= Logger_Singleton::get_instance();
 		if ('' === $default_path) {
 			$default_path = Settings::get_plugin_dir_path();
 		}
@@ -154,7 +166,7 @@ class Autoloader
 		}
 		// Handlers
 		if (str_ends_with($file_name, 'handler')) {
-			// error_log(__CLASS__ . '->' . __LINE__ . '->' . $file_name.'->'.self::$default_path . '/includes/singletons/class-' . $file_name . '.php');
+			// self::$logger->log('->' . $file_name.'->'.self::$default_path . '/includes/singletons/class-' . $file_name . '.php');
 			return self::$default_path . implode(
 				DIRECTORY_SEPARATOR,
 				array('includes', 'handlers', 'class-' . $file_name . '.php')
@@ -176,7 +188,7 @@ class Autoloader
 		}
 		// Singletons
 		if (str_ends_with($file_name, 'singleton')) {
-			// error_log(__CLASS__ . '->' . __LINE__ . '->' . $file_name.'->'.self::$default_path . '/includes/singletons/class-' . $file_name . '.php');
+			// self::$logger->log('->' . $file_name.'->'.self::$default_path . '/includes/singletons/class-' . $file_name . '.php');
 			return self::$default_path . implode(
 				DIRECTORY_SEPARATOR,
 				array('includes', 'singletons', 'class-' . $file_name . '.php')
@@ -248,7 +260,8 @@ class Autoloader
 
 		$class_name = self::$default_namespace . '\\' . $relative_class_name;
 
-		// error_log(__CLASS__ . '->' . __LINE__ . '->' . $class . '->' . $relative_class_name . '->' . self::$default_namespace);
+		static::$logger->log('->' . $class . '->' . $relative_class_name . '->' . self::$default_namespace);
+
 		if (!class_exists($class_name)) {
 			self::load_class($relative_class_name);
 		}

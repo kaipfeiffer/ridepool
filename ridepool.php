@@ -33,7 +33,7 @@ if (!defined('WPINC')) {
     die;
 }
 
-require plugin_dir_path( __FILE__ ) . 'includes/class-ridepool-main.php';
+require plugin_dir_path( __FILE__ ) . 'includes/class-starter.php';
 
 /**
  * Main class to bootstrap the plugin
@@ -94,7 +94,7 @@ class Ridepool
         
         register_deactivation_hook(__FILE__, array(__CLASS__, 'deactivate'));
         
-		Ridepool\Ridepool_Main::run(array(
+		Ridepool\Starter::run(array(
             'plugin_dir_path'       => plugin_dir_path( __FILE__ ),
             'plugin_name'           => 'pcm-flipbook',
             'plugin_text_domain'    => 'pcm-flipbook',
