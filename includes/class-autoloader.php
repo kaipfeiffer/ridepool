@@ -157,6 +157,13 @@ class Autoloader
 	{
 		$file_name 			= str_replace('_', '-', strtolower($class_name));
 
+		// abstracts
+		if (str_ends_with($file_name, 'abstract')) {
+			return self::$default_path . implode(
+				DIRECTORY_SEPARATOR,
+				array('includes', 'abstracts', 'class-' . $file_name . '.php')
+			);
+		}
 		// Controllers
 		if (str_ends_with($file_name, 'controller')) {
 			return self::$default_path . implode(

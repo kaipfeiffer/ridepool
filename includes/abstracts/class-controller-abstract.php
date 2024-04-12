@@ -16,342 +16,109 @@ if (!defined('WPINC')) {
 
 abstract class Controller_Abstract
 {
-    /**
-     * VARIABLES
-     */
-
-
-    /**
-     * $auth
-     * 
-     * @var Kpm_Counter_Auth
-     * Die Auth-Klasse der Route
-     */
-    protected static $auth;
-
-
-    /**
-     * $auth_class
+    /** 
+     * $nonce 
      * 
      * @var string
-     * Die Datenbank-Klasse der Route
      */
-    protected static $auth_class = 'Auth';
-
+    private $nonce;
 
     /**
-     * $class_name
+     * class that provides database access
      * 
-     * @var string
-     * Der Klassenname
+     * @var class
      */
-    protected static $class_name = __CLASS__;
+    private $model;
 
 
     /**
-     * $data
+     * get_class
      * 
-     * @var array|object
-     * Die Daten für die Route
-     */
-    protected static $data;
-
-
-    /**
-     * $databse_class
+     * erstellt beim ersten Aufruf eine Instanz der benötigten Klasse und
+     * gibt diese Instanz zurück
      * 
-     * @var string
-     * Die Route, die Zieldatei
+     * @param   
+     * @return  
+     * @since    1.0.0
      */
-    protected static $database_class;
-
-
-    /**
-     * $route
-     * 
-     * @var string
-     * Die Route, an die Rest-Requests entgegengenommen werden
-     */
-    protected static $route = 'kpm-counter/v1';
-
-
-    /**
-     * $target
-     * 
-     * @var string
-     * Die Route, die Zieldatei
-     */
-    protected static $target;
-
-
-    /**
-     * PRIVATE METHODS
-     */
-
-
-    protected static function include_database_class()
+    function __construct()
     {
-        $class =  Settings::get_plugin_dir_path() . 'includes/classes/models/class-' . str_replace('_', '-', strtolower(static::$database_class)) . '.php';
-
-        // error_log(__CLASS__ . '->' . __FUNCTION__ . '->' . __LINE__ . '-> CLASS: ' . $class);
-        require_once $class;
+        $this->nonce    = strtolower(preg_replace('/\W+/','_',static::class).'_nonce');   
     }
 
 
     /**
-     * PUBLIC METHODS
-     */
-
-
-    /**
-     * @function authenticate
+     * delete
      * 
-     * delete a row of the table
+     * Delete-Request
      * 
-     * @param   array       associative array with key => value pairs for insertion
-     * @return  array|null  if successful, the stored data row
+     * @param   array	request
+     * @return  array   result für json
+     * @since    1.0.0
      */
-    public static function authenticate($request)
+    public function delete($request)
     {
-        $class =  Settings::get_plugin_dir_path() . 'includes/singletons/class-' . str_replace('_', '-', strtolower(static::$auth_class)) . '.php';
-
-        require_once $class;
-
-        static::$auth   = static::$auth_class::get_instance('');
-
-        $result   = static::$auth->authenticate($request);
-
-        // error_log(__CLASS__ . '->' . __FUNCTION__ . '-> CLASS: ' . static::$class_name . '->' . print_r($result, 1));
-        // error_log(__CLASS__.'->'.__FUNCTION__.'-> Class_name: '.print_r(static::$class_name,1));
-        if (isset($result['message']) && 'Access granted:' === $result['message']) {
-            static::$data = $result['data'];
-            if (class_exists(static::$database_class)) {
-                static::$database_class::user($result['data']->counter_user);
-            }
-            return true;
-        } else {
-            return false;
-        }
+        return (array('request' => $request, 'method' => __FUNCTION__, 'class' => __CLASS__, 'nonce' => $this->nonce));
     }
 
 
     /**
-     * @function register_rest_route
+     * get
      * 
-     * register the restroute for this model
+     * Get-Request
      * 
-     * @param   array       associative array with key => value pairs for insertion
-     * @return  array|null  if successful, the stored data row
+     * @param   array|object	request
+     * @return  array   result für json
+     * @since    1.0.0
      */
-    public static function register_rest_route()
+    public function get($request)
     {
-        static::include_database_class();
-
-        register_rest_route(static::$route, '/' . static::$target . '/', array(
-            'methods' => 'POST',
-            'callback' => static::$class_name . '::post',
-            'permission_callback' =>  __CLASS__ . '::authenticate',
-        ));
+        return (array('request' => $request, 'method' => __FUNCTION__, 'class' => __CLASS__, 'nonce' => $this->nonce));
     }
 
 
     /**
-     * @function delete
+     * patch
      * 
-     * delete a row of the table
+     * Patch-Request
      * 
-     * @param   array       associative array with key => value pairs for insertion
-     * @return  array|null  if successful, the stored data row
+     * @param   array	request
+     * @return  array   result für json
+     * @since    1.0.0
      */
-    public static function delete(WP_REST_Request $request)
+    public function patch($request)
     {
+        return (array('request' => $request, 'method' => __FUNCTION__, 'class' => __CLASS__, 'nonce' => $this->nonce));
     }
 
 
     /**
-     * @function edit
+     * post
      * 
-     * delete a row of the table
+     * Post-Request
      * 
-     * @param   array       associative array with key => value pairs for insertion
-     * @return  array|null  if successful, the stored data row
+     * @param   array	request
+     * @return  array   result für json
+     * @since    1.0.0
      */
-    public static function edit(WP_REST_Request $request)
+    public function post($request)
     {
-        // error_log(__CLASS__ . '->' .__LINE__.'->'.print_r($request,1));
-        $method = $request->get_method();
-        switch ($method) {
-                // Neuen Eintrag speichern
-            case 'POST': {
-                    return static::post($request);
-                    break;
-                }
-            case 'PUT': {
-                    return static::put($request);
-                    break;
-                }
-            case 'PATCH': {
-                    return static::patch($request);
-                    break;
-                }
-        }
+        return (array('request' => $request, 'method' => __FUNCTION__, 'class' => __CLASS__, 'nonce' => $this->nonce));
+
     }
 
 
     /**
-     * @function filter_multiple
+     * put
      * 
-     * prepare date before insertion
+     * Put-Request
      * 
-     * @param   array       array with entries to insert
-     * @return  array|null  if successful, the edited array
+     * @param   array	request
+     * @return  array   result für json
+     * @since    1.0.0
      */
-    public static function filter_multiple($params)
-    {    
-        return $params;
-    }
-
-
-    /**
-     * @function get
-     * 
-     * get a row from the table
-     * 
-     * @param   array       associative array with key => value pairs for insertion
-     * @return  array|null  if successful, the stored data row
-     */
-    public static function get(WP_REST_Request $request)
+    public function put($request)
     {
-        // error_log(__CLASS__.'->'.__FUNCTION__.'-> Class_name: '.print_r(static::$class_name,1));
-        // error_log(__CLASS__.'->'.__FUNCTION__.'-> STAT-DATA: '.print_r(static::$data,1));
-        // error_log(__CLASS__.'->'.__FUNCTION__.'-> SELF-DATA: '.print_r($request['page'],1));
-        // error_log(__CLASS__.'->'.__FUNCTION__.'-> REQUEST: '.print_r($request,1));
-
-        $page = $request['page'] ? $request['page'] : 0;
-        $page_size = $request['page_size'] ? $request['page_size'] : null;
-
-
-        if ($request['id']) {
-            $result = static::$database_class::read($request['id']);
-
-            if (!$result) {
-                $error = new \WP_Error(
-                    'rest_post_invalid_id',
-                    sprintf(__(static::$error404, ''), $request['id']),
-                    array('status' => 404)
-                );
-                return $error;
-            }
-        } elseif ($request['ctag']) {
-            $result = static::$database_class::user(static::$data->counter_user)::read(['ctag' => ['value' => $request['ctag'], 'operator' => '>']], false, $page, $page_size);
-        } elseif ($request['filters']) {
-            $result = static::$database_class::read($request['filters'], null, $page, $page_size);
-
-            if (!$result) {
-                $error = new \WP_Error(
-                    'rest_post_invalid_id',
-                    __(static::$errorMulti404, ''),
-                    array('status' => 404)
-                );
-                return $error;
-            }
-        } else {
-            $result = static::$database_class::user(static::$data->counter_user)::get($page, $page_size);
-        }
-
-        return $result;
-    }
-
-
-    /**
-     * @function patch
-     * 
-     * modify a row of the table
-     * 
-     * @param   array       associative array with key => value pairs for insertion
-     * @return  array|null  if successful, the stored data row
-     */
-    public static function patch(WP_REST_Request $request)
-    {
-        return ['message' => 'PATCH Method'];
-    }
-
-
-    /**
-     * @function create
-     * 
-     * add a new row to the table
-     * 
-     * @param   array       associative array with key => value pairs for insertion
-     * @return  array|null  if successful, the stored data row
-     */
-    public static function post(WP_REST_Request $request)
-    {
-        $params = $request->get_params();
-        // error_log(__CLASS__ . '->' . __LINE__ . '-> PARAMS:' . print_r($params, 1));
-        if ($params) {
-            if (isset($params[static::$database_class::get_primary()]) && 0 < $params[static::$database_class::get_primary()]) {
-
-                // error_log(__CLASS__ . '->' . __LINE__ . '->UPDATE');
-                $result = static::$database_class::update($params);
-            } elseif (array_is_list($params)) {
-                // error_log(__CLASS__ . '->' . __LINE__ . '->MULTIPLE');
-                if (is_callable(array(static::$class_name, 'filter_multiple'))) {
-                    $params = static::filter_multiple($params);
-                }
-                $result = static::$database_class::user(static::$data->counter_user)::create_multi($params);
-            } else {
-                // error_log(__CLASS__ . '->' . __LINE__ . '->CREATE');
-                $result = static::$database_class::create($params);
-            }
-            error_log(__CLASS__ . '->' . __LINE__ . '->CREATE:'.print_r($result,1));
-            if ($result) {
-
-                return $result;
-            } else {
-                $error = new \WP_Error(
-                    'rest_post_invalid_id',
-                    __(static::$errorOnSave, ''),
-                    array('status' => 404)
-                );
-                return $error;
-            }
-        } else {
-            $error = new \WP_Error(
-                'rest_post_invalid_id',
-                __(static::$errorMissingData, ''),
-                array('status' => 404)
-            );
-            return $error;
-        }
-    }
-
-
-    /**
-     * @function put
-     * 
-     * save a row to the table
-     * 
-     * @param   array       associative array with key => value pairs for insertion
-     * @return  array|null  if successful, the stored data row
-     */
-    public static function put(WP_REST_Request $request)
-    {
-        $params = $request->get_params();
-        if (isset($params[static::$database_class::get_primary()]) && 0 < $params[static::$database_class::get_primary()]) {
-
-            error_log(__CLASS__ . '->' . __LINE__ . '->UPDATE');
-            $result = static::$database_class::user(static::$data->counter_user)::update($params);
-        }
-        if ($result) {
-            return $result;
-        } else {
-            $error = new \WP_Error(
-                'rest_post_invalid_id',
-                __(static::$errorOnSave, ''),
-                array('status' => 404)
-            );
-            return $error;
-        }
+        return (array('request' => $request, 'method' => __FUNCTION__, 'class' => __CLASS__, 'nonce' => $this->nonce));
     }
 }

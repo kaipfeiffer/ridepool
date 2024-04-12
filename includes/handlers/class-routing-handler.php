@@ -72,9 +72,12 @@ class Routing_Handler
             $method =  strtolower($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
         }
 
-        $handler    = __NAMESPACE__ . '\\' . ucfirst(strtolower($target)) . '_Resource';
+        $handler    = __NAMESPACE__ . '\\' . ucfirst(strtolower($target)) . '_Controller';
 
-        if (!is_callable(array($handler, $method))) {
+        $instance   = new $handler();
+        $method     = array($instance , $method);
+        
+        if (!is_callable($method)) {
             wp_send_json(
                 array(
                     'message' => sprintf('Die Methode "%1$s" der Klasse "%2$s" existiert nicht', $method, $handler)
@@ -83,8 +86,8 @@ class Routing_Handler
             );
         }
 
-        // $result     = call_user_func(array($handler, $method), $request);
-        $result     = array('handler' => $handler, 'method' => $method, 'request' => $request);
+        $result     = call_user_func($method, $request);
+        // $result     = array('handler' => $handler, 'method' => $method, 'request' => $request);
 
         wp_send_json(
             $result
