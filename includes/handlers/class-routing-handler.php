@@ -72,6 +72,8 @@ class Routing_Handler
             $method =  strtolower($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
         }
 
+        error_log(__CLASS__ . '->' . __LINE__ );
+        
         $handler    = __NAMESPACE__ . '\\' . ucfirst(strtolower($target)) . '_Controller';
 
         $instance   = new $handler();
@@ -114,7 +116,7 @@ class Routing_Handler
         $handler    = __NAMESPACE__ . '\\' . ucfirst(strtolower($target)) . '_Resource';
         // class_alias($handler,$handler.'_');
 
-        // static::DEBUG && error_log(__CLASS__ . '->' . __LINE__ . '->REGEX:' . $target . '->' . (strtolower($target) === $target) . '-'."\n", static::DEBUG_TYPE, static::DEBUG_FILE);
+        error_log(__CLASS__ . '->' . __LINE__ . '->REGEX:' . $target . '->' . (strtolower($target) === $target) . '-'."\n");
         // Autoloader::autoload($handler);
 
         if (!is_callable(array($handler, $method))) {

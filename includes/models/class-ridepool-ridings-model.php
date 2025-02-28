@@ -1,4 +1,6 @@
 <?php
+namespace Loworx\Ridepool;
+
 if (!defined('WPINC')) {
     die;
 }
@@ -13,7 +15,7 @@ if (!defined('WPINC')) {
 
 // require_once KPM_COUNTER_PLUGIN_PATH . 'includes/abstracts/abstract-kpm-counter-model-filtered.php';
 
-require_once KPM_COUNTER_PLUGIN_PATH . 'includes/abstracts/abstract-kpm-counter-model-ctagged.php';
+// require_once KPM_COUNTER_PLUGIN_PATH . 'includes/abstracts/abstract-kpm-counter-model-ctagged.php';
 
 // class Kpm_Counter_Readings_Model extends Kpm_Counter_Model_Filtered
 class Ridepool_Ridings_Model extends Model_Ctagged_Abstract

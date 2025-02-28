@@ -130,6 +130,11 @@ class Starter
 			require plugin_dir_path(dirname(__FILE__)) . 'includes' . DIRECTORY_SEPARATOR . 'class-autoloader.php';
 
 			/**
+			 * Composer Autoloader
+			 */
+			require_once plugin_dir_path(dirname(__FILE__))  . 'vendor/autoload.php';
+
+			/**
 			 * Provide new php-methods
 			 */
 			if (phpversion() < '8') {
@@ -171,7 +176,8 @@ class Starter
 	static private function define_public_hooks()
 	{
 		static::$logger->log('Define');
-		if (wp_is_json_request()) {
+		if ( (defined('DOING_AJAX') && DOING_AJAX) || wp_is_json_request()) {
+			static::$logger->log('is json');
 			foreach (static::$json_classes  as $class) {
 				static::$logger->log('Exists:' . $class . '->' . class_exists($class) . '<-');
 				static::$logger->log($class . '->' . is_callable(array($class, 'init_json')) . '<-');

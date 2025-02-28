@@ -54,6 +54,33 @@ abstract class Model_Abstract
 
 
     /**
+     * $error404
+     * error id
+     * 
+     * @var integer
+     */
+    protected static $error404 = 'Ressource not found';
+
+
+    /**
+     * $error503
+     * error id
+     * 
+     * @var integer
+     */
+    protected static $error503 = 'Forbidden';
+
+    
+    /**
+     * $errorOnSave
+     * error id
+     * 
+     * @var integer
+     */
+    protected static $errorOnSave = 'Saving aborted';
+
+
+    /**
      * $error_message
      * message to error
      * 
@@ -427,7 +454,7 @@ abstract class Model_Abstract
     {
         global $wpdb;
 
-        $csv_file_path = Settings::get_plugin_ . 'data/imports/' . static::$import_file;
+        $csv_file_path = Settings::get_plugin_name() . 'data/imports/' . static::$import_file;
 
         error_log($csv_file_path . '|' . file_exists($csv_file_path) . '|');
         if (file_exists($csv_file_path)) {

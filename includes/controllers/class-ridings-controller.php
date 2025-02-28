@@ -22,4 +22,19 @@ class Ridings_Controller extends Controller_Abstract
      */
     const NONCE = 'loworx_riding_controller_nonce';
 
+
+    /**
+     * get
+     * 
+     * Get-Request
+     * 
+     * @param   array|object	request
+     * @return  array   result für json
+     * @since    1.0.0
+     */
+    public function get($request)
+    {
+        $hi     = \Kaipfeiffer\Tramp\Tramp::hello();
+        return (array('request' => $request, 'method' => __FUNCTION__, 'class' => __CLASS__, 'hi'=> $hi));
+    }
 }

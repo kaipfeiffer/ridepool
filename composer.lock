@@ -1,0 +1,66 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "3ef56027439316b1a28f89e075952734",
+    "packages": [
+        {
+            "name": "kaipfeiffer/tramp",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/kaipfeiffer/tramp.git",
+                "reference": "cfb6a9f85d22c384433382027b7ee48a5b4903ee"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/kaipfeiffer/tramp/zipball/cfb6a9f85d22c384433382027b7ee48a5b4903ee",
+                "reference": "cfb6a9f85d22c384433382027b7ee48a5b4903ee",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "php": "^7.3|^8.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Kaipfeiffer\\Tramp\\": "src"
+                }
+            },
+            "license": [
+                "LGPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Kai Pfeiffer",
+                    "email": "kp@loworx.com",
+                    "homepage": "http://loworx.com"
+                }
+            ],
+            "homepage": "https://loworx.com",
+            "keywords": [
+                "php"
+            ],
+            "support": {
+                "source": "https://github.com/kaipfeiffer/tramp/tree/main",
+                "issues": "https://github.com/kaipfeiffer/tramp/issues"
+            },
+            "time": "2025-02-28T10:24:30+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {
+        "kaipfeiffer/tramp": 20
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": [],
+    "plugin-api-version": "2.6.0"
+}
