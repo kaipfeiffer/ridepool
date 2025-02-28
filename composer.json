@@ -1,0 +1,22 @@
+{
+    "name": "loworx/ridepool",
+    "type": "wordpress-plugin",
+    "authors": [
+        {
+            "name": "Kai Pfeiffer",
+            "email": "kp@loworx.com"
+        }
+    ],
+    "require": {
+        "kaipfeiffer/tramp": "dev-main"
+    },
+    "repositories":[
+        {
+            "type": "vcs",
+            "url": "https://github.com/kaipfeiffer/tramp.git"
+        }
+    ],
+    "config":{
+      "secure-http":false
+    }
+}
