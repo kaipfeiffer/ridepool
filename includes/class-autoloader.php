@@ -171,6 +171,13 @@ class Autoloader
 				array('includes', 'controllers', 'class-' . $file_name . '.php')
 			);
 		}
+		// Dao
+		if (str_ends_with($file_name, 'dao')) {
+			return self::$default_path . implode(
+				DIRECTORY_SEPARATOR,
+				array('includes', 'dao', 'class-' . $file_name . '.php')
+			);
+		}
 		// Handlers
 		if (str_ends_with($file_name, 'handler')) {
 			// self::$logger->log('->' . $file_name.'->'.self::$default_path . '/includes/singletons/class-' . $file_name . '.php');

@@ -34,7 +34,8 @@ class Ridings_Controller extends Controller_Abstract
      */
     public function get($request)
     {
-        $hi     = \Kaipfeiffer\Tramp\Tramp::hello();
+        // $hi     = \Kaipfeiffer\Tramp\Tramp::hello('');
+        $hi     = \Kaipfeiffer\Tramp\Tramp::hello(new WPDB_DAO('test'));
         return (array('request' => $request, 'method' => __FUNCTION__, 'class' => __CLASS__, 'hi'=> $hi));
     }
 }

@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/kaipfeiffer/tramp.git",
-                "reference": "cfb6a9f85d22c384433382027b7ee48a5b4903ee"
+                "reference": "d91a96a99bb5ebb7e7d7ea0074cc0d901fd93686"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/kaipfeiffer/tramp/zipball/cfb6a9f85d22c384433382027b7ee48a5b4903ee",
-                "reference": "cfb6a9f85d22c384433382027b7ee48a5b4903ee",
+                "url": "https://api.github.com/repos/kaipfeiffer/tramp/zipball/d91a96a99bb5ebb7e7d7ea0074cc0d901fd93686",
+                "reference": "d91a96a99bb5ebb7e7d7ea0074cc0d901fd93686",
                 "shasum": ""
             },
             "require": {
@@ -49,7 +49,7 @@
                 "source": "https://github.com/kaipfeiffer/tramp/tree/main",
                 "issues": "https://github.com/kaipfeiffer/tramp/issues"
             },
-            "time": "2025-02-28T10:24:30+00:00"
+            "time": "2025-03-14T12:05:10+00:00"
         }
     ],
     "packages-dev": [],
