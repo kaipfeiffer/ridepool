@@ -23,3 +23,20 @@ if (!function_exists('str_ends_with')) {
         return false;
     }
 }
+
+if(!function_exists('array_is_list')){
+    /**
+     * array_is_list
+     * 
+     * checks, if array is a list and not a hash
+     * 
+     * @param   array
+     * @return  bool
+     */
+    function array_is_list($array){
+        if ([] === $array) {
+            return true;
+        }
+        return array_keys($array) === range(0, count($array) - 1);
+    }
+}
