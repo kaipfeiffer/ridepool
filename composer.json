@@ -1,6 +1,7 @@
 {
     "name": "loworx/ridepool",
     "type": "wordpress-plugin",
+    "version": "1.0.1",
     "authors": [
         {
             "name": "Kai Pfeiffer",

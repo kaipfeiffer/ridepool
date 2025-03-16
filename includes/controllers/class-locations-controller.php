@@ -50,7 +50,7 @@ class Locations_Controller extends Controller_Abstract
      */
     public function post($request)
     {
-        \Kaipfeiffer\Tramp\Controllers\LocationController::set_dao(new WPDB_DAO('locations'));
+        \Kaipfeiffer\Tramp\Controllers\LocationController::set_dao(new WPDB_DAO(''));
         $hi     = \Kaipfeiffer\Tramp\Controllers\LocationController::create(array(
             'city'      => 'Gudensberg',
             'zipcode'   => '34281',

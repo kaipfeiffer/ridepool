@@ -5,6 +5,8 @@ if (!defined('WPINC')) {
     die;
 }
 
+use \Kaipfeiffer\Tramp\Controllers\RidingController;
+
 /**
  * controller for ridings
  *
@@ -34,8 +36,7 @@ class Ridings_Controller extends Controller_Abstract
      */
     public function get($request)
     {
-        // $hi     = \Kaipfeiffer\Tramp\Tramp::hello('');
-        $hi     = \Kaipfeiffer\Tramp\Tramp::hello(new WPDB_DAO('test'));
-        return (array('request' => $request, 'method' => __FUNCTION__, 'class' => __CLASS__, 'hi'=> $hi));
+        \Kaipfeiffer\Tramp\Controllers\RidingController::set_dao(new WPDB_DAO(''));
+        return (array('request' => $request, 'method' => __FUNCTION__, 'class' => __CLASS__));
     }
 }
