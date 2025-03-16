@@ -29,5 +29,7 @@ class Activator
 	 */
 	public static function activate()
 	{
+		// create tables
+		\Kaipfeiffer\Tramp\Tramp::setup(new WPDB_DAO(''));
 	}
 }
