@@ -137,7 +137,7 @@ class Starter
 			/**
 			 * Provide new php-methods
 			 */
-			if (phpversion() < '8') {
+			if (phpversion() < '8.1') {
 				require plugin_dir_path(dirname(__FILE__)) . 'includes' . DIRECTORY_SEPARATOR . 'compatibility' . DIRECTORY_SEPARATOR . 'php' . DIRECTORY_SEPARATOR . 'php8-functions.php';
 			}
 
