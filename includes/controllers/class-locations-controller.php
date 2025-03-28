@@ -17,6 +17,15 @@ use \Kaipfeiffer\Tramp\Controllers\LocationController;
 
 class Locations_Controller extends Controller_Abstract
 {
+    /**
+     * AJAX_METHODS 
+     * 
+     * list of permitted functions, that can be called via Ajax
+     * all requests to functions that ar not listed here are blocked
+     */
+    const AJAX_METHODS  = array('get','post');
+
+    
     /** 
      * NONCE 
      * 

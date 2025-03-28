@@ -186,6 +186,13 @@ class Autoloader
 				array('includes', 'handlers', 'class-' . $file_name . '.php')
 			);
 		}
+		// Interfaces
+		if (str_ends_with($file_name, 'interface')) {
+			return self::$default_path . implode(
+				DIRECTORY_SEPARATOR,
+				array('includes', 'interfaces', 'class-' . $file_name . '.php')
+			);
+		}
 		// Models
 		if (str_ends_with($file_name, 'model')) {
 			return self::$default_path . implode(

@@ -14,8 +14,16 @@ if (!defined('WPINC')) {
  * @since   1.0.0 
  */
 
-abstract class Controller_Abstract
+abstract class Controller_Abstract implements Ajax_Interface
 {
+    /**
+     * AJAX_METHODS 
+     * 
+     * list of permitted functions, that can be called via Ajax
+     * all requests to functions that ar not listed here are blocked
+     */
+    const AJAX_METHODS  = array();
+
     /** 
      * $nonce 
      * 
@@ -74,6 +82,20 @@ abstract class Controller_Abstract
     public function get($request)
     {
         return (array('request' => $request, 'method' => __FUNCTION__, 'class' => __CLASS__, 'nonce' => $this->nonce));
+    }
+
+
+	/**
+	 * is_allowed
+	 * 
+	 * checks, if the requested method could be called via ajax
+	 * 
+	 * @param string
+     * @since   1.0.0
+     */
+    static function is_allowed(string $name)
+    {
+        return in_array($name, static::AJAX_METHODS);
     }
 
 
