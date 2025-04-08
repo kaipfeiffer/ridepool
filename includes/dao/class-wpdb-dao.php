@@ -172,9 +172,9 @@ class WPDB_DAO implements DaoConnectorInterface
      * @return  string|null
      * @since   1.0.0
      */
-    public function get_model(?string $tablename = null):?string
+    public function get_model(?string $tablename = null): ?string
     {
-        $model  = __NAMESPACE__.'\\'.ucfirst(strtolower($tablename ?? $this->table)).'_Model';
+        $model  = __NAMESPACE__ . '\\' . ucfirst(strtolower($tablename ?? $this->table)) . '_Model';
         return $model;
     }
 
@@ -188,12 +188,71 @@ class WPDB_DAO implements DaoConnectorInterface
      * @return  string|null
      * @since   1.0.0
      */
-    public function get_tablename(?string $tablename = null):?string
+    public function get_tablename(?string $tablename = null): ?string
     {
         global $wpdb;
 
-        $tablename  = $wpdb->prefix . $this->prefix .( $tablename ?? $this->table);
+        $tablename  = $wpdb->prefix . $this->prefix . ($tablename ?? $this->table);
         return $tablename;
+    }
+
+
+    /**
+     * get placeholder
+     * 
+     * get the placeholder for the selected Fieldtype
+     * 
+     * @param   string
+     * @return  string|null
+     * @since   1.0.0
+     */
+    protected function get_placeholder(string $type): ?string
+    {
+        switch (strtolower($type)) {
+            case 'bigint(20)':
+            case 'bigint(20) unsigned':
+            case 'int(11)':
+            case 'int(11) unsigned':
+            case 'mediumint(9)':
+            case 'mediumint(9) unsigned':
+            case 'smallint(6)':
+            case 'smallint(6) unsigned':
+            case 'tinyint(4)':
+            case 'tinyint(4) unsigned':
+            case 'int(11)':
+            case 'int(11) unsigned': {
+                    return '%d';
+                    break;
+                }
+            case 'decimal':
+            case 'float':
+                return '%f';
+            default:
+                return '%s';
+        }
+    }
+
+
+    /**
+     * get primary_key
+     * 
+     * create the tablename with the required prefixes
+     * 
+     * @param   string
+     * @return  array|null
+     * @since   1.0.0
+     */
+    protected function get_primary_key(string $table_name): ?array
+    {
+        global $wpdb;
+        $schema = $wpdb->get_results(sprintf('DESCRIBE %s', $table_name), ARRAY_A);
+
+        foreach ($schema as $key => $field) {
+            if ('PRI' === strtoupper($field['Key'])) {
+                return array('column' => $field['Field'], 'placeholder' => $this->get_placeholder($field['Type']));
+            }
+        }
+        return null;
     }
 
 
@@ -219,13 +278,14 @@ class WPDB_DAO implements DaoConnectorInterface
      * @return  int|null
      * @since   1.0.0
      */
-    public function create(array $row):int {
+    public function create(array $row): int
+    {
         global $wpdb;
 
         $table_name = $this->get_tablename();
-        error_log(__CLASS__.'->'.__LINE__.'->'.$table_name.'->'.print_r($row,1));
+        error_log(__CLASS__ . '->' . __LINE__ . '->' . $table_name . '->' . print_r($row, 1));
         $res        = $wpdb->insert($table_name, $row);
-        if($res){
+        if ($res) {
             return $wpdb->insert_id;
         }
         return 0;
@@ -239,7 +299,8 @@ class WPDB_DAO implements DaoConnectorInterface
      * @return  bool
      * @since   1.0.0
      */
-    public function delete(array $row):bool {
+    public function delete(array $row): bool
+    {
         return false;
     }
 
@@ -252,14 +313,23 @@ class WPDB_DAO implements DaoConnectorInterface
      * @return  array|null
      * @since   1.0.0
      */
-    public function read($id = null, $page = null):?array
+    public function read($id = null, $page = null): ?array
     {
         global $wpdb;
 
-        $table_name = $this->get_tablename();
-        // error_log(__CLASS__.'->'.__LINE__.'->'.$table_name.'->'.print_r($row,1));
+        $row            = null;
+        $table_name     = $this->get_tablename();
+        $primary_key    = $this->get_primary_key($table_name);
+
+        if ($id) {
+            $sql = sprintf('SELECT * FROM `%s` WHERE `%s` = %s', $table_name, $primary_key['column'], $primary_key['placeholder']);
+            $sql = $wpdb->prepare($sql, $id);
+            $row    = $wpdb->get_row($sql, ARRAY_A);
+        }
+
+        // echo (__CLASS__ . '->' . __LINE__ . '->' . $sql . '->' . print_r($primary_key, 1));
         // $res        = $wpdb->insert($table_name, $row);
-        return array();
+        return $row;
     }
 
 
@@ -271,7 +341,8 @@ class WPDB_DAO implements DaoConnectorInterface
      * @return  array|null
      * @since   1.0.0
      */
-    public function read_by(array $query, $page = null):?array {
+    public function read_by(array $query, $page = null): ?array
+    {
         return null;
     }
 
@@ -285,14 +356,14 @@ class WPDB_DAO implements DaoConnectorInterface
      * @return  int|null
      * @since   1.0.0
      */
-    public function create_table(array $data):?int
+    public function create_table(array $data): ?int
     {
         global $wpdb;
 
         $model  = $this->get_model($data['tablename']);
-        $method = array($model,'create_table');
-        error_log(__CLASS__.'->'.__LINE__.'->'.is_callable($method).'_CLASS:'.$model);
-        if(is_callable($method)){
+        $method = array($model, 'create_table');
+
+        if (is_callable($method)) {
             call_user_func($method, $data);
         }
 
@@ -323,7 +394,7 @@ class WPDB_DAO implements DaoConnectorInterface
         // dbDelta is located in upgrade.php
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
-        error_log(__CLASS__.'->'.__LINE__.'->SQL:'.$sql);
+        // error_log(__CLASS__ . '->' . __LINE__ . '->SQL:' . $sql);
         $res = dbDelta($sql);
         return count($res);
     }
@@ -336,8 +407,15 @@ class WPDB_DAO implements DaoConnectorInterface
      * @return  int|null
      * @since   1.0.0
      */
-    public function update(array $row):?int {
-        return null;
+    public function update(array $row): ?int
+    {
+        global $wpdb;
+
+        $row            = null;
+        $table_name     = $this->get_tablename();
+        $primary_key    = $this->get_primary_key($table_name);
+
+        return $wpdb->update($table_name,$row, array($primary_key['column'] => $row[$primary_key['column']]));
     }
 
 
@@ -353,7 +431,7 @@ class WPDB_DAO implements DaoConnectorInterface
      */
     public function table(string $table): DaoConnectorInterface
     {
-        error_log(__CLASS__.'->'.__LINE__.'->Table:'.$table);
+        error_log(__CLASS__ . '->' . __LINE__ . '->Table:' . $table);
         $this->table = $table;
         return $this;
     }

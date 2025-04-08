@@ -383,6 +383,7 @@ class Admin implements Ajax_Interface
             \Kaipfeiffer\Tramp\Controllers\UserController::set_dao($wpdb_dao);
 
             $tramp_location_id = \Kaipfeiffer\Tramp\Controllers\LocationController::create($location_columns);
+            $user_columns['location_id']    = $tramp_location_id;
             $tramp_user_id  = \Kaipfeiffer\Tramp\Controllers\UserController::create($user_columns);
 
             error_log(__CLASS__ . '->' . __LINE__ . '->' . $tramp_location_id .'->USER:'.$tramp_user_id);
