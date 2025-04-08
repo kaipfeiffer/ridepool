@@ -128,6 +128,10 @@ class Autoloader
 					DIRECTORY_SEPARATOR,
 					array('includes', 'class-activator.php')
 				),
+				'Admin'		=> implode(
+					DIRECTORY_SEPARATOR,
+					array('admin', 'class-admin.php')
+				),
 				'Deactivator'	=> implode(
 					DIRECTORY_SEPARATOR,
 					array('includes', 'class-deactivator.php')
@@ -276,7 +280,7 @@ class Autoloader
 		if (0 !== strpos($class, self::$default_namespace . '\\')) {
 			return;
 		}
-		// error_log(__CLASS__.'->'.__LINE__.'->'.$regex);
+		error_log(__CLASS__.'->'.__LINE__.'->'.$class);
 		$relative_class_name = preg_replace('/^' . self::$default_namespace_regex . '\\\/', '', $class);
 
 		$class_name = self::$default_namespace . '\\' . $relative_class_name;

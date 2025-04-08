@@ -102,8 +102,7 @@ class Admin implements Ajax_Interface
      *  @var array
      *  @since 1.0.39
      */
-    protected $sections = array(
-    );
+    protected $sections = array();
 
 
     /** 
@@ -113,8 +112,7 @@ class Admin implements Ajax_Interface
      *  @var array
      *  @since 1.0.39
      */
-    protected $sub_pages = array(
-    );
+    protected $sub_pages = array();
 
 
     /**
@@ -267,12 +265,12 @@ class Admin implements Ajax_Interface
     }
 
 
-	/**
-	 * is_allowed
-	 * 
-	 * checks, if the requested method could be called via ajax
-	 * 
-	 * @param string
+    /**
+     * is_allowed
+     * 
+     * checks, if the requested method could be called via ajax
+     * 
+     * @param string
      * @since   1.0.0
      */
     static function is_allowed(string $name)
@@ -369,13 +367,65 @@ class Admin implements Ajax_Interface
         return $class_name;
     }
 
+    static public function save_tramp_user_data($user_id)
+    {
+        if (!current_user_can('edit_user', $user_id))
+            return false;
+
+        $is_tramp_user = get_user_meta($user_id, 'is_tramp_user', 1);
+        $sanitized  = 'on' === $_POST['is_tramp_user'];
+        if ($is_tramp_user) {
+            $location_columns = $_POST['tramp_location'];
+            $user_columns = $_POST['tramp_user'];
+
+            $wpdb_dao   = new WPDB_DAO('');
+            \Kaipfeiffer\Tramp\Controllers\LocationController::set_dao($wpdb_dao);
+            \Kaipfeiffer\Tramp\Controllers\UserController::set_dao($wpdb_dao);
+
+            $tramp_location_id = \Kaipfeiffer\Tramp\Controllers\LocationController::create($location_columns);
+            $tramp_user_id  = \Kaipfeiffer\Tramp\Controllers\UserController::create($user_columns);
+
+            error_log(__CLASS__ . '->' . __LINE__ . '->' . $tramp_location_id .'->USER:'.$tramp_user_id);
+            update_user_meta($user_id, 'tramp_location_id', $tramp_location_id);
+            update_user_meta($user_id, 'tramp_user_id', $tramp_user_id);
+        }
+        error_log(__CLASS__ . '->' . __LINE__ . '->' . $sanitized);
+        update_user_meta($user_id, 'is_tramp_user', $sanitized);
+    }
+
+    static public function show_tramp_user_data($user)
+    {
+        $wpdb_dao   = new WPDB_DAO('');
+        $is_tramp_user = get_user_meta($user->ID, 'is_tramp_user', 1);
+        if ($is_tramp_user) {
+            $tramp_location_id  = get_user_meta($user->ID, 'tramp_location_id', 1);
+            $tramp_user_id      = get_user_meta($user->ID, 'tramp_user_id', 1);
+
+            \Kaipfeiffer\Tramp\Controllers\LocationController::set_dao($wpdb_dao);
+            \Kaipfeiffer\Tramp\Controllers\UserController::set_dao($wpdb_dao);
+
+            if ($tramp_location_id ?? null) {
+                echo $tramp_location_id.'<hr />';
+                $location_columns = \Kaipfeiffer\Tramp\Controllers\LocationController::read($tramp_location_id);
+                echo $tramp_location_id.'<hr />';
+            } else {
+                $location_columns = \Kaipfeiffer\Tramp\Controllers\LocationController::get_editable_columns();
+            }
+            if ($tramp_user_id ?? null) {
+                $user_columns = \Kaipfeiffer\Tramp\Controllers\UserController::read($tramp_user_id);
+            } else {
+                $user_columns = \Kaipfeiffer\Tramp\Controllers\UserController::get_editable_columns();
+            }
+        }
+        include_once Settings::get_plugin_dir_path() . implode(DIRECTORY_SEPARATOR, array('admin', 'templates', 'tramp-user-settings.php'));
+    }
 
     /**
      * Register the JavaScript for the admin area.
      *
      * @since    1.0.0
      */
-    public function enqueue_scripts()
+    static public function enqueue_scripts()
     {
 
         /**

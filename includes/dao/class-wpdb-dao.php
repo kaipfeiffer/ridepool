@@ -223,6 +223,7 @@ class WPDB_DAO implements DaoConnectorInterface
         global $wpdb;
 
         $table_name = $this->get_tablename();
+        error_log(__CLASS__.'->'.__LINE__.'->'.$table_name.'->'.print_r($row,1));
         $res        = $wpdb->insert($table_name, $row);
         if($res){
             return $wpdb->insert_id;
@@ -253,6 +254,11 @@ class WPDB_DAO implements DaoConnectorInterface
      */
     public function read($id = null, $page = null):?array
     {
+        global $wpdb;
+
+        $table_name = $this->get_tablename();
+        // error_log(__CLASS__.'->'.__LINE__.'->'.$table_name.'->'.print_r($row,1));
+        // $res        = $wpdb->insert($table_name, $row);
         return array();
     }
 
@@ -317,6 +323,7 @@ class WPDB_DAO implements DaoConnectorInterface
         // dbDelta is located in upgrade.php
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
+        error_log(__CLASS__.'->'.__LINE__.'->SQL:'.$sql);
         $res = dbDelta($sql);
         return count($res);
     }

@@ -47,6 +47,16 @@ class Starter
 	static private $is_loaded = false;
 
 	/**
+	 * The loader that's responsible for maintaining and registering all hooks that power
+	 * the plugin.
+	 *
+	 * @since    1.0.0
+	 * @access   protected
+	 * @var      Loader    $loader    Maintains and registers all hooks for the plugin.
+	 */
+	static protected $loader;
+
+	/**
 	 * logger
 	 * 
 	 * @access private
@@ -130,6 +140,11 @@ class Starter
 			require plugin_dir_path(dirname(__FILE__)) . 'includes' . DIRECTORY_SEPARATOR . 'class-autoloader.php';
 
 			/**
+			 * The Autoloader
+			 */
+			require plugin_dir_path(dirname(__FILE__)) . 'includes' . DIRECTORY_SEPARATOR . 'class-loader.php';
+
+			/**
 			 * Composer Autoloader
 			 */
 			require_once plugin_dir_path(dirname(__FILE__))  . 'vendor/autoload.php';
@@ -142,6 +157,7 @@ class Starter
 			}
 
 			self::$is_loaded	= true;
+			self::$loader 		= new Loader();
 		}
 	}
 
@@ -164,6 +180,9 @@ class Starter
 	 */
 	static private function define_admin_hooks()
 	{
+		add_action( 'edit_user_profile', array(__NAMESPACE__.'\\Admin', 'show_tramp_user_data'));
+		add_action( 'edit_user_profile_update', array(__NAMESPACE__.'\\Admin', 'save_tramp_user_data') );
+	
 	}
 
 	/**
@@ -229,5 +248,7 @@ class Starter
 		self::set_locale();
 		self::define_admin_hooks();
 		self::define_public_hooks();
+
+		self::$loader->run();
 	}
 }
