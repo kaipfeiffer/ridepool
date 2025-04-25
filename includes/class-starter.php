@@ -167,9 +167,7 @@ class Starter
 	 * @since    1.0.0
 	 * @access   private
 	 */
-	static private function set_locale()
-	{
-	}
+	static private function set_locale() {}
 
 	/**
 	 * Register all of the hooks related to the admin area functionality
@@ -180,9 +178,8 @@ class Starter
 	 */
 	static private function define_admin_hooks()
 	{
-		add_action( 'edit_user_profile', array(__NAMESPACE__.'\\Admin', 'show_tramp_user_data'));
-		add_action( 'edit_user_profile_update', array(__NAMESPACE__.'\\Admin', 'save_tramp_user_data') );
-	
+		add_action('edit_user_profile', array(__NAMESPACE__ . '\\Admin', 'show_tramp_user_data'));
+		add_action('edit_user_profile_update', array(__NAMESPACE__ . '\\Admin', 'save_tramp_user_data'));
 	}
 
 	/**
@@ -195,15 +192,21 @@ class Starter
 	static private function define_public_hooks()
 	{
 		static::$logger->log('Define');
-		if ( (defined('DOING_AJAX') && DOING_AJAX) || wp_is_json_request()) {
+		if ((defined('DOING_AJAX') && DOING_AJAX) || wp_is_json_request()) {
 			static::$logger->log('is json');
 			foreach (static::$json_classes  as $class) {
 				static::$logger->log('Exists:' . $class . '->' . class_exists($class) . '<-');
 				static::$logger->log($class . '->' . is_callable(array($class, 'init_json')) . '<-');
 				if (is_callable(array($class, 'init_json'))) {
-					call_user_func(array($class, 'init_json'),static::$logger);
+					call_user_func(array($class, 'init_json'), static::$logger);
 				}
 			}
+		}
+
+		$custom_post_types	= array('Entrypoints_Cpt');
+		
+		foreach ($custom_post_types as $cpt) {
+			add_action('init', array(__NAMESPACE__ . '\\' . $cpt, 'init'));
 		}
 	}
 

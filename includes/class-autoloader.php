@@ -175,6 +175,13 @@ class Autoloader
 				array('includes', 'controllers', 'class-' . $file_name . '.php')
 			);
 		}
+		// Controllers
+		if (str_ends_with($file_name, 'cpt')) {
+			return self::$default_path . implode(
+				DIRECTORY_SEPARATOR,
+				array('includes', 'custom-post-types', 'class-' . $file_name . '.php')
+			);
+		}
 		// Dao
 		if (str_ends_with($file_name, 'dao')) {
 			return self::$default_path . implode(
