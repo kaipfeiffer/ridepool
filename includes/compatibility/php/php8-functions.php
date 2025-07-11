@@ -31,9 +31,12 @@ if(!function_exists('array_is_list')){
      * checks, if array is a list and not a hash
      * 
      * @param   array
-     * @return  bool
+     * @return  null|bool
      */
     function array_is_list($array){
+        if (!is_array($array)) {
+            return null;
+        }
         if ([] === $array) {
             return true;
         }
