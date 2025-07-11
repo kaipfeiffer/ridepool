@@ -15,7 +15,7 @@ use \Kaipfeiffer\Tramp\Controllers\RidingController;
  * @since   1.0.0 
  */
 
-class Ridings_Controller extends Controller_Abstract
+class Riding_Controller extends Controller_Abstract
 {
     /**
      * AJAX_METHODS 
@@ -33,6 +33,15 @@ class Ridings_Controller extends Controller_Abstract
      */
     const NONCE = 'loworx_riding_controller_nonce';
 
+    /**
+     * $tramp_class
+     * 
+     * class for tramp locations
+     * 
+     * @var string
+     */
+    static protected $tramp_class = null;
+
 
     /**
      * get
@@ -45,7 +54,11 @@ class Ridings_Controller extends Controller_Abstract
      */
     public function get($request)
     {
-        \Kaipfeiffer\Tramp\Controllers\RidingController::set_dao(new WPDB_DAO(''));
+        $tramp_class = static::get_tramp_class();
+        if ($tramp_class === null) {
+            return;
+        }
+        
         return (array('request' => $request, 'method' => __FUNCTION__, 'class' => __CLASS__));
     }
 }

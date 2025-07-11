@@ -15,7 +15,7 @@ use \Kaipfeiffer\Tramp\Controllers\LocationController;
  * @since   1.0.0 
  */
 
-class Locations_Controller extends Controller_Abstract
+class Location_Controller extends Controller_Abstract
 {
     /**
      * AJAX_METHODS 
@@ -32,6 +32,15 @@ class Locations_Controller extends Controller_Abstract
      * string to create an unique nonce
      */
     const NONCE = 'loworx_riding_controller_nonce';
+
+    /**
+     * $tramp_class
+     * 
+     * class for tramp locations
+     * 
+     * @var string
+     */
+    static protected $tramp_class = null;
 
 
     /**
@@ -59,8 +68,11 @@ class Locations_Controller extends Controller_Abstract
      */
     public function post($request)
     {
-        \Kaipfeiffer\Tramp\Controllers\LocationController::set_dao(new WPDB_DAO(''));
-        $hi     = \Kaipfeiffer\Tramp\Controllers\LocationController::create(array(
+        $tramp_class = static::get_tramp_class();
+        if ($tramp_class === null) {
+            return;
+        }
+        $hi     = call_user_func(array($tramp_class, 'create'), array(
             'city'      => 'Gudensberg',
             'zipcode'   => '34281',
             'street'    => 'Mühlenweg 2',
