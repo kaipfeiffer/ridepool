@@ -283,7 +283,7 @@ class WPDB_DAO implements DaoConnectorInterface
         global $wpdb;
 
         $table_name = $this->get_tablename();
-        error_log(__CLASS__ . '->' . __LINE__ . '->' . $table_name . '->' . print_r($row, 1));
+
         $res        = $wpdb->insert($table_name, $row);
         if ($res) {
             return $wpdb->insert_id;
