@@ -541,6 +541,8 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
             } else {
                 $user_columns = User_Controller::get_columns();
             }
+            
+            $user_columns['email']  = $user_columns['email'] ? $user_columns['email'] : $user->user_email;
         }
         $labels = static::get_labels();
         $input_types    = array(
