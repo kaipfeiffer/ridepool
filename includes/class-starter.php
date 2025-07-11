@@ -2,6 +2,8 @@
 
 namespace Loworx\Ridepool;
 
+require_once plugin_dir_path(dirname(__FILE__)) . 'includes' . DIRECTORY_SEPARATOR . 'abstracts' . DIRECTORY_SEPARATOR . 'class-base-logger-abstract.php';
+
 /**
  * The file that defines the core plugin class
  *
@@ -29,8 +31,7 @@ namespace Loworx\Ridepool;
  * @subpackage Ridepool/includes
  * @author     Kai Pfeiffer <kp@loworx.com>
  */
-class Starter
-{
+class Starter extends Base_Logger_Abstract{
 
 	/*
     *   VARIABLES
@@ -55,16 +56,6 @@ class Starter
 	 * @var      Loader    $loader    Maintains and registers all hooks for the plugin.
 	 */
 	static protected $loader;
-
-	/**
-	 * logger
-	 * 
-	 * @access private
-	 * @since   1.0.0 
-	 * @static
-	 * @var     Logger_Singleton
-	 */
-	static private $logger;
 
 	/**
 	 * admin_classes
@@ -140,7 +131,7 @@ class Starter
 			require plugin_dir_path(dirname(__FILE__)) . 'includes' . DIRECTORY_SEPARATOR . 'class-autoloader.php';
 
 			/**
-			 * The Autoloader
+			 * The Loader
 			 */
 			require plugin_dir_path(dirname(__FILE__)) . 'includes' . DIRECTORY_SEPARATOR . 'class-loader.php';
 
@@ -191,14 +182,14 @@ class Starter
 	 */
 	static private function define_public_hooks()
 	{
-		static::$logger->log('Define');
+		static::use_logger()->log('Define');
 		if ((defined('DOING_AJAX') && DOING_AJAX) || wp_is_json_request()) {
-			static::$logger->log('is json');
+			static::use_logger()->log('is json');
 			foreach (static::$json_classes  as $class) {
-				static::$logger->log('Exists:' . $class . '->' . class_exists($class) . '<-');
-				static::$logger->log($class . '->' . is_callable(array($class, 'init_json')) . '<-');
+				static::use_logger()->log('Exists:' . $class . '->' . class_exists($class) . '<-');
+				static::use_logger()->log($class . '->' . is_callable(array($class, 'init_json')) . '<-');
 				if (is_callable(array($class, 'init_json'))) {
-					call_user_func(array($class, 'init_json'), static::$logger);
+					call_user_func(array($class, 'init_json'), static::use_logger());
 				}
 			}
 		}
@@ -220,8 +211,7 @@ class Starter
 		// load dependencies
 		self::load_dependencies();
 
-		self::$logger	= Logger_Singleton::get_instance(true);
-		static::$logger->log('Define');
+		static::use_logger()->log('Define');
 
 		// set settings
 		Settings::set_plugin_dir_path($params['plugin_dir_path']);
