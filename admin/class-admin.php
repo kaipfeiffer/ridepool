@@ -14,7 +14,7 @@ if (!defined('WPINC')) {
  * @version        1.0.0
  * @author        Kai Pfeiffer
  */
-class Admin implements Ajax_Interface
+class Admin extends Base_Logger_Abstract implements Ajax_Interface
 {
 
 
@@ -58,16 +58,6 @@ class Admin implements Ajax_Interface
     const NONCE = 'Ridepool_Admin';
 
 
-    /** 
-     *  $instance
-     * 
-     *  Die Instanz des Singletons
-     * 
-     *  @var class
-     *  @since 1.0.39
-     */
-    private static $instance = null;
-
 
     /** 
      *  $admin_hook_suffix
@@ -85,6 +75,14 @@ class Admin implements Ajax_Interface
      */
     private $admin_page_tabs = [];
 
+    /** 
+     *  $blog_id
+     * 
+     *  Die ID des Blogs, in dem die Einstellungen gespeichert werden sollen
+     *  @var int
+     *  @since 1.0.39
+     */
+    protected static $blog_id = null;
 
     /** 
      *  $plugin_option_slug
@@ -114,25 +112,139 @@ class Admin implements Ajax_Interface
      */
     protected $sub_pages = array();
 
+    /*
+    *   PROTECTED METHODS
+    */
 
     /**
-     * darf nur privat aufgerufen werden
+     * get_blog_id
+     * 
+     * Gibt die Blog-ID zurück, zu welscher die Einstellungen gespeichert werden sollen
+     * 
+     * @return int
      */
-    private function __construct() {}
-
-    /**darf nicht geklont werden
-     */
-    private function __clone() {}
-
-    /**
-     * prevent from being unserialized (which would create a second instance of it)
-     */
-    public function __wakeup()
+    static protected function get_blog_id()
     {
-        throw new \Exception("Cannot unserialize singleton");
+        global $wpdb;
+        if (null === static::$blog_id) {
+            static::$blog_id = get_current_blog_id();
+        }
+        return $wpdb->prefix . static::$blog_id;
     }
 
 
+    /**
+     * get_class_name
+     * 
+     * Ermittelt den Klassennamen aus einem Page-Slug
+     *
+     * @since    1.0.0
+     */
+    protected static function get_class_name($slug)
+    {
+        $slug_parts = explode('_', $slug);
+
+        foreach ($slug_parts as $index => $slug) {
+            $slug_parts[$index] = ucfirst($slug);
+        }
+
+        $class_name = implode('_', $slug_parts);
+        static::use_logger('Class-Name' . $class_name);
+        return $class_name;
+    }
+
+    /**
+     * get_is_tramp_user_meta
+     * 
+     * Gibt zurück, ob der Benutzer ein Tramp-User ist
+     * 
+     * @param WP_User $user
+     * @return bool
+     */
+    static protected function get_is_tramp_user_meta($user_id)
+    {
+        $blog_id = static::get_blog_id();
+        return get_user_meta($user_id, $blog_id . '_is_tramp_user', true);
+    }
+
+    /**
+     * get_tramp_location_id_meta
+     * 
+     * Gibt die Tramp-Location-ID des Benutzers zurück
+     * 
+     * @param WP_User $user
+     * @return mixed
+     */
+    static protected function get_tramp_location_id_meta($user_id)
+    {
+        $blog_id = static::get_blog_id();
+        return get_user_meta($user_id, $blog_id . '_tramp_location_id', true);
+    }
+
+    /**
+     * get_tramp_user_id_meta
+     * 
+     * Gibt die Tramp-User-ID des Benutzers zurück
+     * 
+     * @param WP_User $user
+     * @return mixed
+     */
+    static protected function get_tramp_user_id_meta($user_id)
+    {
+        $blog_id = static::get_blog_id();
+        return get_user_meta($user_id, $blog_id . '_tramp_user_id', true);
+    }
+
+
+    /**
+     * set_is_tramp_user_meta
+     * 
+     * Speichert die Information, ob der Benutzer ein Tramp-User ist
+     * 
+     * @param WP_User $user
+     * @param bool $data
+     * @return bool
+     */
+    static protected function set_is_tramp_user_meta($user_id, $data)
+    {
+        $blog_id = static::get_blog_id();
+        static::use_logger()->log('set_is_tramp_user_meta: ' . $blog_id . '_is_tramp_user' . '->' . $data);
+        return update_user_meta($user_id, $blog_id . '_is_tramp_user', $data);
+    }
+
+    /**
+     * set_tramp_location_id_meta
+     * 
+     * Speichert die Tramp-Location-ID des Benutzers
+     * 
+     * @param WP_User $user
+     * @param mixed $data
+     * @return bool
+     */
+    static protected function set_tramp_location_id_meta($user_id, $data)
+    {
+        $blog_id = static::get_blog_id();
+        return update_user_meta($user_id, $blog_id . '_tramp_location_id', $data);
+    }
+
+    /**
+     * set_tramp_user_id_meta
+     * 
+     * Speichert die Tramp-User-ID des Benutzers
+     * 
+     * @param WP_User $user
+     * @param mixed $data
+     * @return bool
+     */
+    static protected function set_tramp_user_id_meta($user_id, $data)
+    {
+        $blog_id = static::get_blog_id();
+        return update_user_meta($user_id, $blog_id . '_tramp_user_id', $data);
+    }
+
+    /*
+    *   PUBLIC METHODS
+    */
     /**
      * admin_menu
      * 
@@ -219,12 +331,6 @@ class Admin implements Ajax_Interface
             $containers[] = '<div id="' . $slug . '_content" class="' . $active . '">' . $content['tab_content'] . '</div>';
             $active = '';
         }
-
-?>
-
-        <div>
-        </div>
-<?php
     }
 
 
@@ -249,19 +355,6 @@ class Admin implements Ajax_Interface
         }
 
         $this->display();
-    }
-
-
-    /**
-     * gets the instance via lazy initialization (created on first usage)
-     */
-    public static function get_instance()
-    {
-        if (static::$instance === null) {
-            static::$instance = new self();
-        }
-
-        return static::$instance;
     }
 
 
@@ -348,31 +441,19 @@ class Admin implements Ajax_Interface
 
 
     /**
-     * get_class_name
+     * save_tramp_user_data
      * 
-     * Ermittelt den Klassennamen aus einem Page-Slug
-     *
-     * @since    1.0.0
+     * Speichert die Tramp-User-Daten des Benutzers
+     * 
+     * @param int $user_id
+     * @since 1.0.39
      */
-    protected static function get_class_name($slug)
-    {
-        $slug_parts = explode('_', $slug);
-
-        foreach ($slug_parts as $index => $slug) {
-            $slug_parts[$index] = ucfirst($slug);
-        }
-
-        $class_name = implode('_', $slug_parts);
-        error_log(__CLASS__ . '->' . __LINE__ . '->' . $class_name);
-        return $class_name;
-    }
-
     static public function save_tramp_user_data($user_id)
     {
         if (!current_user_can('edit_user', $user_id))
             return false;
 
-        $is_tramp_user = get_user_meta($user_id, 'is_tramp_user', 1);
+        $is_tramp_user = static::get_is_tramp_user_meta($user_id);
         $sanitized  = 'on' === $_POST['is_tramp_user'];
         if ($is_tramp_user) {
             $location_columns = $_POST['tramp_location'];
@@ -386,29 +467,44 @@ class Admin implements Ajax_Interface
             $user_columns['location_id']    = $tramp_location_id;
             $tramp_user_id  = \Kaipfeiffer\Tramp\Controllers\UserController::create($user_columns);
 
-            error_log(__CLASS__ . '->' . __LINE__ . '->' . $tramp_location_id .'->USER:'.$tramp_user_id);
-            update_user_meta($user_id, 'tramp_location_id', $tramp_location_id);
-            update_user_meta($user_id, 'tramp_user_id', $tramp_user_id);
+            error_log(__CLASS__ . '->' . __LINE__ . '->' . $tramp_location_id . '->USER:' . $tramp_user_id);
+            static::set_tramp_location_id_meta($user_id, $tramp_location_id);
+            static::set_tramp_user_id_meta($user_id, $tramp_user_id);
         }
         error_log(__CLASS__ . '->' . __LINE__ . '->' . $sanitized);
-        update_user_meta($user_id, 'is_tramp_user', $sanitized);
+    //    $result = static::set_is_tramp_user_meta($user_id, $sanitized);
+        $blog_id = static::get_blog_id();
+        static::use_logger()->log('set_is_tramp_user_meta: ' . $blog_id . '_is_tramp_user' . '->' . $sanitized);
+        $result = update_user_meta($user_id, $blog_id . '_is_tramp_user', $sanitized);
+       static::use_logger()->log('set_is_tramp_user_meta: ' . $user_id . '_is_tramp_user' . '->' . $result);
     }
 
+
+
+    /**
+     * show_tramp_user_data
+     * 
+     * Zeigt die Tramp-User-Daten des Benutzers an
+     * 
+     * @param WP_User $user
+     * @return void
+     */
     static public function show_tramp_user_data($user)
     {
         $wpdb_dao   = new WPDB_DAO('');
-        $is_tramp_user = get_user_meta($user->ID, 'is_tramp_user', 1);
+        $is_tramp_user = static::get_is_tramp_user_meta($user->ID);
+        static::use_logger()->log('Log-ID' . get_current_blog_id());
         if ($is_tramp_user) {
-            $tramp_location_id  = get_user_meta($user->ID, 'tramp_location_id', 1);
-            $tramp_user_id      = get_user_meta($user->ID, 'tramp_user_id', 1);
+            $tramp_location_id  = static::get_tramp_location_id_meta($user->ID);
+            $tramp_user_id      = static::get_tramp_user_id_meta($user->ID);
 
             \Kaipfeiffer\Tramp\Controllers\LocationController::set_dao($wpdb_dao);
             \Kaipfeiffer\Tramp\Controllers\UserController::set_dao($wpdb_dao);
 
             if ($tramp_location_id ?? null) {
-                echo $tramp_location_id.'<hr />';
+                echo $tramp_location_id . '<hr />';
                 $location_columns = \Kaipfeiffer\Tramp\Controllers\LocationController::read($tramp_location_id);
-                echo $tramp_location_id.'<hr />';
+                echo $tramp_location_id . '<hr />';
             } else {
                 $location_columns = \Kaipfeiffer\Tramp\Controllers\LocationController::get_editable_columns();
             }
