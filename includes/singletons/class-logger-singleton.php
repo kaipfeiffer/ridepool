@@ -106,7 +106,7 @@ class Logger_Singleton
     {
         $caller = debug_backtrace()[1];
 
-        $caller = $caller['file'] . '->' . $caller['line'] . ':';
+        $caller = 'LOGGER:'.$caller['file'] . '->' . $caller['line'] . ':';
 
         return $caller;
     }
