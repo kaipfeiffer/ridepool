@@ -167,6 +167,30 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
         return get_user_meta($user_id, $blog_id . '_is_tramp_user', true);
     }
 
+    static protected function get_labels()
+    {
+        $labels = array(
+            'title' => __('Title', 'ridepool'),
+            'givenname' => __('Given Name', 'ridepool'),
+            'familyname'    => __('Family Name', 'ridepool'),
+            'birthday'  => __('Birthday', 'ridepool'),
+            'email' => __('Email', 'ridepool'),
+            'phone' => __('Phone', 'ridepool'),
+            'cell'  => __('Cell', 'ridepool'),
+            'identity_card_number'  => __('Identity Card Number', 'ridepool'),
+            'identity_card_validity'    => __('Identity Card Validity', 'ridepool'),
+            'street'    => __('Street', 'ridepool'),
+            'zipcode'   => __('Zip Code', 'ridepool'),
+            'city'  => __('City', 'ridepool'),
+            'region'    => __('Region', 'ridepool'),
+            'country'   => __('Country', 'ridepool'),
+            'latitude'  => __('Latitude', 'ridepool'),
+            'longitude' => __('Longitude', 'ridepool'),
+        );
+
+        return apply_filters('ridepool_tramp_user_labels', $labels);
+    }
+
     /**
      * get_tramp_location_id_meta
      * 
@@ -453,30 +477,39 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
         if (!current_user_can('edit_user', $user_id))
             return false;
 
-        $is_tramp_user = static::get_is_tramp_user_meta($user_id);
-        $sanitized  = 'on' === $_POST['is_tramp_user'];
+        $is_tramp_user =  $sanitized  = 'on' === $_POST['is_tramp_user'];
         if ($is_tramp_user) {
             $location_columns = $_POST['tramp_location'];
             $user_columns = $_POST['tramp_user'];
 
-            $wpdb_dao   = new WPDB_DAO('');
-            \Kaipfeiffer\Tramp\Controllers\LocationController::set_dao($wpdb_dao);
-            \Kaipfeiffer\Tramp\Controllers\UserController::set_dao($wpdb_dao);
+            $missing_location_columns = Location_Controller::check($location_columns);
+            $missing_user_columns = User_Controller::check($user_columns);
 
-            $tramp_location_id = \Kaipfeiffer\Tramp\Controllers\LocationController::create($location_columns);
-            $user_columns['location_id']    = $tramp_location_id;
-            $tramp_user_id  = \Kaipfeiffer\Tramp\Controllers\UserController::create($user_columns);
+            $missings = array_merge($missing_location_columns, $missing_user_columns);
 
-            error_log(__CLASS__ . '->' . __LINE__ . '->' . $tramp_location_id . '->USER:' . $tramp_user_id);
-            static::set_tramp_location_id_meta($user_id, $tramp_location_id);
-            static::set_tramp_user_id_meta($user_id, $tramp_user_id);
+            if (!count($missings)) {
+                if (!isset($location_columns['id']) || empty($location_columns['id'])) {
+                    $tramp_location_id = Location_Controller::create($location_columns);
+                    static::set_tramp_location_id_meta($user_id, $tramp_location_id);
+                } else {
+                    $location_columns = Location_Controller::update($location_columns);
+                    $tramp_location_id = $location_columns['id'];
+                }
+
+                $user_columns['location_id']    = $tramp_location_id;
+                if (!isset($user_columns['id']) || empty($user_columns['id'])) {
+                    $tramp_user_id = User_Controller::create($user_columns);
+                    static::set_tramp_user_id_meta($user_id, $tramp_user_id);
+                } else {
+                    $user_columns = User_Controller::update($user_columns);
+                    $tramp_user_id = $user_columns['id'];
+                }
+            }
+            error_log(__CLASS__ . '->' . __LINE__ . '->' . print_r($missings, 1));
         }
-        error_log(__CLASS__ . '->' . __LINE__ . '->' . $sanitized);
-    //    $result = static::set_is_tramp_user_meta($user_id, $sanitized);
-        $blog_id = static::get_blog_id();
-        static::use_logger()->log('set_is_tramp_user_meta: ' . $blog_id . '_is_tramp_user' . '->' . $sanitized);
-        $result = update_user_meta($user_id, $blog_id . '_is_tramp_user', $sanitized);
-       static::use_logger()->log('set_is_tramp_user_meta: ' . $user_id . '_is_tramp_user' . '->' . $result);
+
+        $result = static::set_is_tramp_user_meta($user_id, $sanitized);
+        static::use_logger()->log('set_is_tramp_user_meta: ' . $user_id . '_is_tramp_user' . '->' . $result);
     }
 
 
@@ -491,30 +524,43 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
      */
     static public function show_tramp_user_data($user)
     {
-        $wpdb_dao   = new WPDB_DAO('');
         $is_tramp_user = static::get_is_tramp_user_meta($user->ID);
         static::use_logger()->log('Log-ID' . get_current_blog_id());
         if ($is_tramp_user) {
             $tramp_location_id  = static::get_tramp_location_id_meta($user->ID);
             $tramp_user_id      = static::get_tramp_user_id_meta($user->ID);
 
-            \Kaipfeiffer\Tramp\Controllers\LocationController::set_dao($wpdb_dao);
-            \Kaipfeiffer\Tramp\Controllers\UserController::set_dao($wpdb_dao);
-
             if ($tramp_location_id ?? null) {
-                echo $tramp_location_id . '<hr />';
-                $location_columns = \Kaipfeiffer\Tramp\Controllers\LocationController::read($tramp_location_id);
-                echo $tramp_location_id . '<hr />';
+                $location_columns = Location_Controller::read($tramp_location_id);
             } else {
-                $location_columns = \Kaipfeiffer\Tramp\Controllers\LocationController::get_editable_columns();
+                $location_columns = Location_Controller::get_columns();
+                static::use_logger()->log('Location-Columns: ' . print_r($location_columns, 1));
             }
             if ($tramp_user_id ?? null) {
-                $user_columns = \Kaipfeiffer\Tramp\Controllers\UserController::read($tramp_user_id);
+                $user_columns = User_Controller::read($tramp_user_id);
             } else {
-                $user_columns = \Kaipfeiffer\Tramp\Controllers\UserController::get_editable_columns();
+                $user_columns = User_Controller::get_columns();
             }
         }
-        include_once Settings::get_plugin_dir_path() . implode(DIRECTORY_SEPARATOR, array('admin', 'templates', 'tramp-user-settings.php'));
+        $labels = static::get_labels();
+        $input_types    = array(
+            'givenname' => 'text',
+            'familyname' => 'text',
+            'birthday' => 'date',
+            'email' => 'email',
+            'phone' => 'tel',
+            'cell' => 'tel',
+            'identity_card_number' => 'text',
+            'identity_card_validity' => 'date',
+            'street' => 'text',
+            'zipcode' => 'text',
+            'city' => 'text',
+            'region' => 'text',
+            'country' => 'text',
+            // Geodata
+            'latitude' => 'number',
+            'longitude' => 'number');
+         include_once Settings::get_plugin_dir_path() . implode(DIRECTORY_SEPARATOR, array('admin', 'templates', 'tramp-user-settings.php'));
     }
 
     /**
