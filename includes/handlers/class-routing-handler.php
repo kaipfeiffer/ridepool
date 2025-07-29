@@ -72,23 +72,35 @@ class Routing_Handler
             $method =  strtolower($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
         }
 
-        error_log(__CLASS__ . '->' . __LINE__ );
-        
+
+
         $handler    = __NAMESPACE__ . '\\' . ucfirst(strtolower($target)) . '_Controller';
 
-        $instance   = new $handler();
-        $method     = array($instance , $method);
-        
-        if (!is_callable($method)) {
+        static::$logger->log($handler);
+        $check_method = array($handler, 'is_allowed');
+        if (is_callable($check_method)) {
+            if (call_user_func($check_method, $method)) {
+                $current_method = array($handler, $method);
+                if (!is_callable($current_method)) {
+                    $instance       = new $handler();
+                    $current_method = array($instance, $method);
+                    if (!is_callable($current_method)) {
+                        $current_method = null;
+                    }
+                }
+            }
+        }
+
+        if (!is_callable($current_method)) {
             wp_send_json(
                 array(
-                    'message' => sprintf('Die Methode "%1$s" der Klasse "%2$s" existiert nicht', $method, $handler)
+                    'message' => sprintf(__('the method "%1$s" of the class "%2$s" doesn\'t exist.','ridepool'), $method, $handler)
                 ),
                 404
             );
         }
 
-        $result     = call_user_func($method, $request);
+        $result     = call_user_func($current_method, $request->get());
         // $result     = array('handler' => $handler, 'method' => $method, 'request' => $request);
 
         wp_send_json(
@@ -116,7 +128,7 @@ class Routing_Handler
         $handler    = __NAMESPACE__ . '\\' . ucfirst(strtolower($target)) . '_Resource';
         // class_alias($handler,$handler.'_');
 
-        error_log(__CLASS__ . '->' . __LINE__ . '->REGEX:' . $target . '->' . (strtolower($target) === $target) . '-'."\n");
+        error_log(__CLASS__ . '->' . __LINE__ . '->REGEX:' . $target . '->' . (strtolower($target) === $target) . '-' . "\n");
         // Autoloader::autoload($handler);
 
         if (!is_callable(array($handler, $method))) {
@@ -135,9 +147,9 @@ class Routing_Handler
 
 
     /**
-     * init
+     * init_json
      * 
-     * Filter und Actions der Klasse zufügen
+     * initialize ajax 
      *
      * @since    1.0.0
      */
@@ -149,12 +161,11 @@ class Routing_Handler
         $caller = debug_backtrace()[2]['function'];
         switch ($caller) {
             case 'define_admin_hooks': {
-                    self::$logger->log('-> Admin');
+                    // self::$logger->log('-> Admin');
                     add_action('wp_ajax_' . static::TARGET, [__CLASS__, 'router']);
                     break;
                 }
             case 'define_public_hooks': {
-                    self::$logger->log('->wp_ajax_nopriv_' . static::TARGET . '_check' . is_callable([__CLASS__, 'check']));
                     add_action('wp_ajax_nopriv_' . static::TARGET, [__CLASS__, 'router']);
                     break;
                 }
