@@ -14,7 +14,8 @@ if (!defined('WPINC')) {
  * @version        1.0.0
  * @author        Kai Pfeiffer
  */
-class Location_Subpage extends Admin_Subpage_Abstract{
+class Location_Subpage extends Admin_Subpage_Abstract
+{
 
     const ADMIN_SUBPAGE_SLUG = 'location';
 
@@ -22,24 +23,23 @@ class Location_Subpage extends Admin_Subpage_Abstract{
 
     const NONCE = 'Location_Subpage_Nonce';
 
+    static function get_page_title()
+    {
+        return __('Edit Locations', 'ridepool');
+    }
 
     static function get_plural()
     {
-        return __('Location','ridepool');
+        return __('Location', 'ridepool');
     }
 
     static function get_singlular()
     {
-        return __('Locations','ridepool');
+        return __('Locations', 'ridepool');
     }
-
-        static function get_page_title()
-        {
-            return __('Edit Locations','ridepool');
-        }
-
+    
     static function get_title()
     {
-        return __('Locations','ridepool');
+        return __('Locations', 'ridepool');
     }
 }
