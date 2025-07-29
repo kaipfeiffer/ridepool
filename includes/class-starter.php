@@ -171,6 +171,17 @@ class Starter extends Base_Logger_Abstract{
 	{
 		add_action('edit_user_profile', array(__NAMESPACE__ . '\\Admin', 'show_tramp_user_data'));
 		add_action('edit_user_profile_update', array(__NAMESPACE__ . '\\Admin', 'save_tramp_user_data'));
+		add_action('admin_menu', array(__NAMESPACE__ . '\\Admin', 'admin_menu'));
+		if ((defined('DOING_AJAX') && DOING_AJAX) || wp_is_json_request()) {
+			static::use_logger()->log('is json');
+			foreach (static::$json_classes  as $class) {
+				static::use_logger()->log('Exists:' . $class . '->' . class_exists($class) . '<-');
+				static::use_logger()->log($class . '->' . is_callable(array($class, 'init_json')) . '<-');
+				if (is_callable(array($class, 'init_json'))) {
+					call_user_func(array($class, 'init_json'), static::use_logger());
+				}
+			}
+		}
 	}
 
 	/**
@@ -194,11 +205,11 @@ class Starter extends Base_Logger_Abstract{
 			}
 		}
 
-		$custom_post_types	= array('Entrypoints_Cpt');
+		// $custom_post_types	= array('Entrypoints_Cpt');
 		
-		foreach ($custom_post_types as $cpt) {
-			add_action('init', array(__NAMESPACE__ . '\\' . $cpt, 'init'));
-		}
+		// foreach ($custom_post_types as $cpt) {
+		// 	add_action('init', array(__NAMESPACE__ . '\\' . $cpt, 'init'));
+		// }
 	}
 
 	/**
@@ -235,7 +246,8 @@ class Starter extends Base_Logger_Abstract{
 
 		//  classes that provide json hooks
 		static::$json_classes = array(
-			Routing_Handler::class,
+			__NAMESPACE__ . '\\Routing_Handler',
+			__NAMESPACE__ . '\\Admin'
 		);
 
 		self::set_locale();
