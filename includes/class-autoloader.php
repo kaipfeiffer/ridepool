@@ -214,6 +214,39 @@ class Autoloader extends Base_Logger_Abstract
 				array('includes', 'singletons', 'class-' . $file_name . '.php')
 			);
 		}
+		// Subpages
+		if (str_ends_with($file_name, 'subpage')) {
+			// self::use_logger()->log('->' . $file_name.'->'.self::$default_path . '/includes/singletons/class-' . $file_name . '.php');
+			return self::$default_path . implode(
+				DIRECTORY_SEPARATOR,
+				array('admin', 'subpages', 'class-' . $file_name . '.php')
+			);
+		}
+
+		// Tabs
+		if (str_ends_with($file_name, 'tab')) {
+			return self::$default_path . implode(
+				DIRECTORY_SEPARATOR,
+				array('admin', 'tabs', 'class-' . $file_name . '.php')
+			);
+		}
+
+		// WP List Tables
+		if (str_ends_with($file_name, 'form-table')) {
+			return self::$default_path . implode(
+				DIRECTORY_SEPARATOR,
+				array('includes', 'partials', 'form-tables', 'class-' . $file_name . '.php')
+			);
+		}
+
+		// WP List Tables
+		if (str_ends_with($file_name, 'wp-list-table')) {
+			return self::$default_path . implode(
+				DIRECTORY_SEPARATOR,
+				array('includes', 'partials', 'wp-list-tables', 'class-' . $file_name . '.php')
+			);
+		}
+
 		// Tables
 		if (str_ends_with($file_name, 'table')) {
 			return self::$default_path . implode(
