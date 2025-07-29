@@ -15,7 +15,7 @@ namespace Loworx;
  * @package           ridepool
  *
  * @wordpress-plugin
- * Plugin Name:       Ride-Pool
+ * Plugin Name:       RidePool
  * Plugin URI:        https://loworx.com
  * Description:       Ridepool is a wordpress plugin, that connects local rides with local co-riders to reduce traffic and carbon dioxide emissions.
  * Version:           1.0.0
@@ -70,8 +70,6 @@ class Ridepool
         Ridepool\Deactivator::deactivate();
     }
 
-    // register_deactivation_hook(__FILE__, 'deactivate_sbu_wc_handout');
-
     /**
      * The core plugin class that is used to define internationalization,
      * admin-specific hooks, and public-facing site hooks.
@@ -94,12 +92,17 @@ class Ridepool
         
         register_deactivation_hook(__FILE__, array(__CLASS__, 'deactivate'));
         
+        $plugin_data    = get_file_data(__FILE__, array('Plugin Name','Text Domain','Version'), 'plugin');
+
+        // error_log(__CLASS__.'->'.__LINE__);
+        // error_log(print_r($plugin_data,1));
+
 		Ridepool\Starter::run(array(
             'plugin_dir_path'       => plugin_dir_path( __FILE__ ),
-            'plugin_name'           => 'pcm-flipbook',
-            'plugin_text_domain'    => 'pcm-flipbook',
+            'plugin_name'           => strtolower($plugin_data[0]) ?? 'ridepool',
+            'plugin_text_domain'    => $plugin_data[1] ?? 'ridepool',
             'plugin_url'            => plugin_dir_url(__FILE__),
-            'plugin_version'        => '1.0.0',
+            'plugin_version'        => $plugin_data[2] ?? '1.0.0',
         ));
     }
 }
