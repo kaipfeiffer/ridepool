@@ -40,6 +40,12 @@ class JWT_Singleton
 
 
     /**
+     * subject for jwt token
+     */
+    protected $subject  = 'Ridepool';
+
+
+    /**
      * $secret.
      *
      * Der Algorithmus, mit dem der Hash des Tokens verschlüsselt wird
@@ -197,7 +203,7 @@ class JWT_Singleton
         $payload    = array(
             'data'  => $data,
             'id'    => uniqid($this->issuer, true), // Unique ID
-            'sub'   => 'SBU-Handout',                 // Subject
+            'sub'   => $this->subject,                 // Subject
             'exp'   => $iat + $validity,            // Expiration date
             'iss'   => $this->get_issuer(),         // issuer
             'iat'   => $iat,                        // issued at
