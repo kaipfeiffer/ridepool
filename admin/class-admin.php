@@ -2,15 +2,16 @@
 
 namespace Loworx\Ridepool;
 
+use WP_List_Table;
+
 if (!defined('WPINC')) {
     exit;
 } // Exit if accessed directly
 
 
 /**
- * Adds Sbu-Handouts Shortcodes
- *
- * @class        WC_Sbu_Handouts_Shortcodes
+ * 
+ * @class        Admin
  * @version        1.0.0
  * @author        Kai Pfeiffer
  */
@@ -19,39 +20,49 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
 
 
     /** 
+     * TARGET
+     * 
+     * Das Ajax-Ziel über das die Registrierung erfolgt
+     * 
+     * @const string
+     */
+    const TARGET    = 'ridepool-admin-router';
+
+
+    /**
+     * Logger instance
+     *
+     * @since 1.0.0
+     * @access private
+     * @static
+     *
+     * @var Logger_Singleton
+     */
+    private static $logger;
+
+
+    /** 
      * AJAX_METHODS
      * 
-     * Methoden, die über den Ajax-Router aufgerufen werden.
+     * Methods that could by called by the ajax router
      * 
      * @since 1.0.63
      */
-    const AJAX_METHODS  = array();
+    const AJAX_METHODS  = array('get_template');
 
 
     /**
      * ADMIN_PAGE_SLUG 
      * 
-     * Eine Konstante für den Slug, weil dieser an mehrern Positionen abgefragt wird
+     * slug constant
      */
     const ADMIN_PAGE_SLUG  = 'ridepool_admin';
-
-    /**
-     * DRAFT_PAGE_COUNT
-     * 
-     * Eine Konstante um festzulegen, wieviele veraltete Handzettel-Seiten und 
-     * Handzettel-Beiträge per Skript-Aufruf auf Entwurf umgestellt werden sollen
-     * 
-     * ACHTUNG!
-     * Durch den Aufruf von update_post_meta kann es zu einem Memory-Leak kommen
-     * DRAFT_PAGE_COUNT = 30 ist definitiv zu hoch
-     */
-    const DRAFT_PAGE_COUNT = 10;
 
 
     /** 
      * NONCE 
      * 
-     * string, der zur eindeutigen Identifizierung des Nonces benötigt wird
+     * string for identifying the nonce
      * 
      * @since   1.0.80
      */
@@ -65,7 +76,7 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
      *  @var string
      *  @since 1.0.39
      */
-    private $admin_hook_suffix = null;
+    protected static $admin_hook_suffix = null;
 
     /** 
      *  $admin_page_tabs
@@ -73,7 +84,7 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
      *  @var array
      *  @since 1.0.39
      */
-    private $admin_page_tabs = [];
+    protected static $admin_page_tabs = [];
 
     /** 
      *  $blog_id
@@ -94,13 +105,13 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
 
 
     /** 
-     *  $sections
+     *  $tabs
      * 
-     * Die Sections, die im Adminbereich eingebunden werden sollen
+     * Die tabs, die im Adminbereich eingebunden werden sollen
      *  @var array
      *  @since 1.0.39
      */
-    protected $sections = array();
+    protected static $tabs = array('User_Tab', 'Location_Tab');
 
 
     /** 
@@ -110,7 +121,7 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
      *  @var array
      *  @since 1.0.39
      */
-    protected $sub_pages = array();
+    protected static $sub_pages = array('User_Subpage','Location_Subpage');
 
     /*
     *   PROTECTED METHODS
@@ -270,15 +281,14 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
     *   PUBLIC METHODS
     */
     /**
-     * admin_menu
+     * add_admin_tab
      * 
-     * Admin-Menu erstellen
      * @since 1.0.39
      */
     public function add_admin_tab($tab_name, $tab_content, $tab_slug = null)
     {
         $tab_slug = $tab_slug ? strtolower(Settings::get_plugin_name()) . '_' . $tab_slug : strtolower(Settings::get_plugin_name() . '_' . preg_replace('/\W/', '_', $tab_name));
-        $this->admin_page_tabs[$tab_slug]   = ['tab_name' => $tab_name, 'tab_content' => $tab_content];
+        static::$admin_page_tabs[$tab_slug]   = ['tab_name' => $tab_name, 'tab_content' => $tab_content];
     }
 
 
@@ -294,7 +304,7 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
         $tab_slug       = call_user_func($method);
         $tab_content    = call_user_func(array($tab, 'get_view'));
 
-        $this->add_admin_tab($tab_name, $tab_content, $tab_slug);
+        static::add_admin_tab($tab_name, $tab_content, $tab_slug);
     }
 
 
@@ -304,25 +314,24 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
      * Admin-Menu erstellen
      * @since 1.0.39
      */
-    public function admin_menu()
+    static public function admin_menu()
     {
-        $text_domain    = Settings::get_plugin_text_domain();
         $page_slug      = Settings::get_plugin_name() . '_' . self::ADMIN_PAGE_SLUG;
 
-        $this->admin_hook_suffix = add_menu_page(
-            __('Ridings Admin', $text_domain),
-            __('Ridings Admin', $text_domain),
+        static::$admin_hook_suffix = add_menu_page(
+            __('Ridings Admin', 'ridepool'),
+            __('Ridings Admin', 'ridepool'),
             'manage_options',
             $page_slug,
-            [$this, 'display_admin_page'],
+            [__CLASS__, 'display_admin_page'],
             'dashicons-schedule',
             30
         );
 
         // Bezeichnung des ersten Eintrages ändern (erster Eintrag verweist ebenfalls auf Hauptseite)
-        add_submenu_page($page_slug, __('Einstellungen', $text_domain), __('Einstellungen', $text_domain), 'manage_options', $page_slug);
+        add_submenu_page($page_slug, __('Settings', 'ridepool'), __('Einstellungen', 'ridepool'), 'manage_options', $page_slug);
 
-        foreach ($this->sub_pages as $sub_page) {
+        foreach (static::$sub_pages as $sub_page) {
             // error_log(__CLASS__ . '->' . __LINE__ . '->' . $sub_page);
             $method = array(__NAMESPACE__ . '\\' . $sub_page, 'admin_menu');
             if (is_callable($method)) {
@@ -331,7 +340,7 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
         }
 
         // Styles und Scripte nur bei Anzeige der Backend-Seite laden
-        add_action('admin_print_styles-' . $this->admin_hook_suffix, array($this, 'enqueue_scripts'));
+        // add_action('admin_print_styles-' . static::$admin_hook_suffix, array(__CLASS__, 'enqueue_scripts'));
 
         // $loader->add_action('woocommerce_process_product_meta', $this, 'save_custom_meta_fields', 1);
         return null;
@@ -344,16 +353,88 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
      * Admin-Menu erstellen
      * @since 1.0.39
      */
-    public function display()
+    static public function display()
     {
         $tabs = [];
         $containers = [];
         $active = 'active';
 
-        foreach ($this->admin_page_tabs as $slug => $content) {
-            $tabs[] = '<li class="' . $active . '"><a id="' . $slug . '_menu_item">' . $content['tab_name'] . '</a></li>';
-            $containers[] = '<div id="' . $slug . '_content" class="' . $active . '">' . $content['tab_content'] . '</div>';
-            $active = '';
+        $tab_html = implode('', array(
+            '<li ',
+            'class="%1$s" ',
+            'aria-controls="%2$s_content" ',
+            'role="tab" ',
+            'id="%2$s_menu_item"',
+            'aria-selected="%3$s"',
+            'data-store="%4$d"',
+            '><a>%5$s</a></li>'
+        ));
+        $tab_panel_html = implode('', array(
+            '<div ',
+            'class="%1$s" ',
+            'role="tabpanel" ',
+            'id="%2$s_content"',
+            '%3$s', // hidden
+            '>%4$s</div>'
+        ));
+        $slug = 'start';
+        $content = '';
+        if (file_exists(Settings::get_plugin_dir_path() . '/admin/templates/admin-start-template.php')) {
+            ob_start();
+            include_once Settings::get_plugin_dir_path() . '/admin/templates/admin-start-template.php';
+            $content = ob_get_clean();
+        }
+        $tabs[] = sprintf(
+            $tab_html,
+            $active,
+            $slug,
+            'active' === $active ? 'true' : 'false',
+            0,
+            __('Start', 'ridepool')
+        );
+        $containers[] = sprintf(
+            $tab_panel_html,
+            $active,
+            $slug,
+            'active' !== $active ? 'hidden' : '',
+            $content
+        );
+        $active = '';
+        foreach (static::$admin_page_tabs as $slug => $content) {
+            $tabs[] = sprintf(
+                $tab_html,
+                $active,
+                $slug,
+                'active' === $active ? 'true' : 'false',
+                1,
+                $content['tab_name']
+            );
+            $containers[] = sprintf(
+                $tab_panel_html,
+                $active,
+                $slug,
+                'active' !== $active ? 'hidden' : '',
+                $content['tab_content']
+            );
+        }
+
+        $template_file  = implode(DIRECTORY_SEPARATOR, array(
+            Settings::get_plugin_dir_path(),
+            'admin',
+            'templates',
+            'admin-template.php'
+        ));
+
+        $plugin_prefix  = Settings::get_plugin_name();
+        static::use_logger()->log($template_file);
+        if (file_exists($template_file)) {
+            include_once $template_file;
+        } else {
+            echo sprintf(
+                '<div><ul>%1$s</ul><div>%2$s</div></div>',
+                implode('', $tabs),
+                implode('', $containers)
+            );
         }
     }
 
@@ -365,20 +446,20 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
      * 
      * @since 1.0.39
      */
-    public function display_admin_page()
+    static public function display_admin_page()
     {
 
-        foreach ($this->sections as $entry) {
+        foreach (static::$tabs as $entry) {
 
-            // error_log(__CLASS__ . '->' . __FUNCTION__ . '->' . __LINE__ . '-> DISPLAY_ADMIN_PAGE'.__NAMESPACE__ . '\\' . $entry);
+            error_log(__CLASS__ . '->' . __FUNCTION__ . '->' . __LINE__ . '-> DISPLAY_ADMIN_PAGE' . __NAMESPACE__ . '\\' . $entry);
             $method = array(__NAMESPACE__ . '\\' . $entry, 'get_title');
 
             if (is_callable($method)) {
-                $this->add_page(call_user_func($method), __NAMESPACE__ . '\\' . $entry);
+                static::add_page(call_user_func($method), __NAMESPACE__ . '\\' . $entry);
             }
         }
-
-        $this->display();
+        static::enqueue_scripts();
+        static::display();
     }
 
 
@@ -402,19 +483,16 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
      * Filter und Actions der Klasse zufügen
      * @since 1.0
      */
-    public function init()
+    static public function init()
     {
         $page_slug      = Settings::get_plugin_name() . '_' . self::ADMIN_PAGE_SLUG;
         // error_log(__CLASS__ . '->' . __FUNCTION__ . '->' . __LINE__ . '-> INIT Backend');
 
-        add_action('admin_menu', array($this, 'admin_menu'));
-        // $loader->add_action('woocommerce_process_product_meta', $this, 'save_custom_meta_fields', 1);
+        add_action('admin_menu', array(__CLASS__, 'admin_menu'));
 
-
-        // Module müssen nur geladen werden, wenn die Handout-Backend-Seite aufgerufen wird
         if (isset($_GET['page']) && $page_slug  === $_GET['page']) {
-            // error_log(__CLASS__ . '->' . __FUNCTION__ . '->' . __LINE__ . '-> INIT SECTIONS');
-            foreach ($this->sections as $entry) {
+            // error_log(__CLASS__ . '->' . __FUNCTION__ . '->' . __LINE__ . '-> INIT tabS');
+            foreach (static::$tabs as $entry) {
                 $method = array(__NAMESPACE__ . '\\' . $entry, 'init');
                 if (is_callable($method)) {
                     call_user_func($method);
@@ -422,22 +500,22 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
 
                 $method = array(__NAMESPACE__ . '\\' . $entry, 'enqueue_scripts');
                 if (is_callable($method)) {
-                    // error_log(__CLASS__ . '->' . __FUNCTION__ . '->' . __LINE__ . '->IS_SCRIPT:' . $entry . '->' . 'admin_print_styles-' . $this->admin_hook_suffix);
-                    // $loader->add_action('admin_print_styles-'.$this->admin_hook_suffix, $entry, 'enqueue_scripts');
+                    // error_log(__CLASS__ . '->' . __FUNCTION__ . '->' . __LINE__ . '->IS_SCRIPT:' . $entry . '->' . 'admin_print_styles-' . static::$admin_hook_suffix);
+                    // $loader->add_action('admin_print_styles-'.static::$admin_hook_suffix, $entry, 'enqueue_scripts');
                     add_action('admin_enqueue_scripts', $method);
                     // $entry::enqueue_scripts();
                 }
 
                 $method = array(__NAMESPACE__ . '\\' . $entry, 'enqueue_styles');
                 if (is_callable($method)) {
-                    // error_log(__CLASS__ . '->' . __FUNCTION__ . '->' . __LINE__ . '->IS_SCRIPT:' . $entry . '->' . 'admin_print_styles-' . $this->admin_hook_suffix);
-                    // $loader->add_action('admin_print_styles-'.$this->admin_hook_suffix, $entry, 'enqueue_scripts');
+                    // error_log(__CLASS__ . '->' . __FUNCTION__ . '->' . __LINE__ . '->IS_SCRIPT:' . $entry . '->' . 'admin_print_styles-' . static::$admin_hook_suffix);
+                    // $loader->add_action('admin_print_styles-'.static::$admin_hook_suffix, $entry, 'enqueue_scripts');
                     add_action('admin_enqueue_scripts', $method);
                     // $entry::enqueue_scripts();
                 }
             }
         } elseif (!wp_doing_ajax()) {
-            foreach ($this->sub_pages as $sub_page) {
+            foreach (static::$sub_pages as $sub_page) {
                 // error_log(__CLASS__ . '->' . __LINE__ . '->' . $sub_page);
                 $method = array(__NAMESPACE__ . '\\' . $sub_page, 'admin_init');
                 if (is_callable($method)) {
@@ -446,21 +524,82 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
                 }
             }
         }
+        return null;
+    }
 
-        // Handzettel nur bei Aufruf im Backend deaktivieren
-        if (!wp_doing_ajax()) {
-            static::$plugin_option_slug = strtolower(Settings::get_plugin_name()) . '_options_frontend';
-            $plugin_options     = get_option(static::$plugin_option_slug);
 
-            list($year, $month, $kw)  = explode('-', date('Y-m-W')); {
-                if (52 <= (int)$kw  && 1 === (int)$month) {
-                    $year--;
-                } elseif (1 === (int)$kw  && 12 === (int)$month) {
-                    $year++;
+    /**
+     * init_json
+     * 
+     * initialize ajax 
+     *
+     * @since    1.0.0
+     */
+
+
+    static function init_json($logger)
+    {
+        self::$logger   = $logger;
+        self::$logger->log('-> AdminRouter');
+        $caller = debug_backtrace()[2]['function'];
+        switch ($caller) {
+            case 'define_admin_hooks': {
+                    add_action('wp_ajax_' . static::TARGET, [__CLASS__, 'router']);
+                    break;
                 }
+            case 'define_public_hooks': {
+                    // self::$logger->log('->wp_ajax_nopriv_' . static::TARGET . '_check' . is_callable([__CLASS__, 'check']));
+                    add_action('wp_ajax_nopriv_' . static::TARGET, [__CLASS__, 'router']);
+                    break;
+                }
+            default: {
+                    add_action('wp_ajax_' . static::TARGET, [__CLASS__, 'router']);
+                    add_action('wp_ajax_nopriv_' . static::TARGET, [__CLASS__, 'router']);
+                }
+        }
+    }
+
+
+    /**
+     * router
+     *
+     * @since    1.0.0
+     */
+    static function router()
+    {
+        $request    = Request_Singleton::get_instance();
+
+        $target = $request->get('target', 'alphanum');
+        $class  = $request->get('class', 'alphanum');
+
+        $class    = __NAMESPACE__ . '\\' . $class;
+
+        $current_method = array($class,'is_allowed');
+
+        if (is_callable($current_method) && call_user_func($current_method,$target)) {
+            $current_method = array($class, $target);
+
+            if(!is_callable($current_method)){
+                $instance = new $class();
+                $current_method = array($instance, $target);
             }
         }
-        return null;
+
+        if (!is_callable($current_method)) {
+            wp_send_json(
+                array(
+                    'message' => sprintf(__('the method "%1$s" of the class "%2$s" doesn\'t exist.', 'ridepool'), $target, __CLASS__)
+                ),
+                404
+            );
+        }
+
+        $result     = call_user_func($current_method, $request);
+        // $result     = array('handler' => $handler, 'method' => $method, 'request' => $request);
+
+        wp_send_json(
+            $result
+        );
     }
 
 
@@ -541,7 +680,7 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
             } else {
                 $user_columns = User_Controller::get_columns();
             }
-            
+
             $user_columns['email']  = $user_columns['email'] ? $user_columns['email'] : $user->user_email;
         }
         $labels = static::get_labels();
@@ -561,8 +700,48 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
             'country' => 'text',
             // Geodata
             'latitude' => 'number',
-            'longitude' => 'number');
-         include_once Settings::get_plugin_dir_path() . implode(DIRECTORY_SEPARATOR, array('admin', 'templates', 'tramp-user-settings.php'));
+            'longitude' => 'number'
+        );
+        include_once Settings::get_plugin_dir_path() . implode(DIRECTORY_SEPARATOR, array('admin', 'templates', 'tramp-user-settings.php'));
+    }
+
+    /**
+     * get_template
+     *
+     * @since    1.0.0
+     */
+    static public function get_template($request)
+    {
+        $controller = __NAMESPACE__ . '\\' . ucfirst($request->get('table', 'alphanum')) . '_Controller';
+        $list_table = __NAMESPACE__ . '\\Ridings_' . ucfirst($request->get('table', 'alphanum')) . '_WP_List_Table';
+        $html       = '';
+        $list_table_instance = new $list_table();
+        if ($list_table_instance instanceof WP_List_Table) {
+            $list_table_instance->prepare_items();
+            ob_start();
+            $list_table_instance->display();
+            $html       = ob_get_clean();
+        }
+
+        $get_columns_method = array($controller, 'get_columns');
+        $get_primary_key_method = array($controller, 'get_primary_key');
+
+        if (is_callable($get_columns_method)) {
+            $columns = call_user_func($get_columns_method);
+        }
+        if (is_callable($get_primary_key_method)) {
+            $primary = call_user_func($get_primary_key_method);
+        }
+
+
+        return (array(
+            'columns' => $columns,
+            'primary' => $primary,
+            'request' => $request,
+            'html' => $html,
+            'class' => __CLASS__,
+            'nonce' => is_callable($get_columns_method),
+        ));
     }
 
     /**
@@ -577,16 +756,37 @@ class Admin extends Base_Logger_Abstract implements Ajax_Interface
          * This function is provided for demonstration purposes only.
          *
          * An instance of this class should be passed to the run() function
-         * defined in Sbu_wc_handout_Loader as all of the hooks are defined
+         * defined in Loader as all of the hooks are defined
          * in that particular class.
          *
-         * The Sbu_wc_handout_Loader will then create the relationship
+         * The Loader will then create the relationship
          * between the defined hooks and the functions defined in this
          * class.
          */
 
         // error_log(__CLASS__ . '->' . __FUNCTION__ . '->' . __LINE__ . '-> enqueue_scripts' );
-        wp_enqueue_style(Settings::get_plugin_name(), Settings::get_plugin_url() . implode(DIRECTORY_SEPARATOR, array('admin', 'assets', 'css', 'admin.css')), array(), Settings::get_plugin_version(), 'all');
-        wp_enqueue_script(Settings::get_plugin_name(), Settings::get_plugin_url() . implode(DIRECTORY_SEPARATOR, array('admin', 'assets', 'js', 'admin.js')), array('jquery'), Settings::get_plugin_version(), false);
+
+        $css_path   = Settings::get_plugin_dir_path() . implode(DIRECTORY_SEPARATOR, array('admin', 'assets', 'css', 'admin.css'));
+
+        static::use_logger()->log($css_path);
+        if (file_exists($css_path)) {
+            static::use_logger()->log('LOADED');
+            $css_url  = Settings::get_plugin_url() . implode(DIRECTORY_SEPARATOR, array('admin', 'assets', 'css', 'admin.css'));
+            wp_enqueue_style(Settings::get_plugin_name(), $css_url, array(), Settings::get_plugin_version(), 'all');
+        }
+
+        $js_path   = Settings::get_plugin_dir_path() . implode(DIRECTORY_SEPARATOR, array('admin', 'assets', 'js', 'admin.js'));
+        if (file_exists($js_path)) {
+            $js_handle  = Settings::get_plugin_name() . '_admin';
+            $js_url  = Settings::get_plugin_url() . implode(DIRECTORY_SEPARATOR, array('admin', 'assets', 'js', 'admin.js'));
+            wp_enqueue_script($js_handle, $js_url, array('jquery'), Settings::get_plugin_version(), false);
+            wp_localize_script($js_handle, $js_handle . '_data', array(
+                'path'      => Settings::get_plugin_url() . 'admin/assets/js/tabs/',
+                'prefix'    => strtolower(Settings::get_plugin_name()),
+                'action'    => 'ridepool-admin-router',
+                'target'    => 'get_template',
+                'ajaxurl'   => admin_url('admin-ajax.php'),
+            ));
+        }
     }
 }
