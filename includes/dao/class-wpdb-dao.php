@@ -8,6 +8,23 @@ class WPDB_DAO implements DaoConnectorInterface
 {
 
 
+
+    /**
+     * db
+     *
+     * @var     wpdb
+     * @since   1.0.0
+     */
+    protected $db;
+
+    /**
+     * columns
+     *
+     * @var     array
+     * @since   1.0.0
+     */
+    protected $columns;
+
     /**
      * table_name
      *
@@ -164,6 +181,67 @@ class WPDB_DAO implements DaoConnectorInterface
 
 
     /**
+     * get place_holder
+     * 
+     * create the model classname with prefixed namespace
+     * 
+     * @param   string
+     * @return  string|null
+     * @since   1.0.0
+     */
+    public function get_place_holder($type): ?string
+    {
+        preg_match('/^\w+/', $type, $matches);
+
+        switch ($matches[0]) {
+            case 'bigint':
+            case 'int':
+            case 'mediumint':
+            case 'smallint':
+            case 'tinyint':
+                return '%d';
+            case 'varchar':
+            case 'text':
+            case 'char':
+            case 'date':
+            case 'datetime':
+                return '%s';
+            case 'decimal':
+            case 'numeric':
+            case 'float':
+            case 'double':
+                return '%f';
+            default:
+                return null;
+        }
+    }
+
+
+    /**
+     * get_columns
+     * 
+     * get the columns for the current table
+     * 
+     * @return  array|null
+     * @since   1.0.0
+     */
+    public function get_columns(): ?array
+    {
+        if (!$this->columns) {
+            $sql = sprintf('DESCRIBE `%s`;', $this->get_tablename());
+
+            $this->columns = array();
+            $result = $this->db->get_results($sql, ARRAY_A);
+            foreach ($result as $field) {
+                $this->columns[$field['Field']]  = $this->get_place_holder($field['Type']);
+            }
+            error_log(__CLASS__ . '->' . __LINE__ . '->' . $sql . '->' . print_r($this->columns, 1));
+        }
+        return $this->columns;
+    }
+
+
+    /**
      * get model
      * 
      * create the model classname with prefixed namespace
@@ -190,9 +268,9 @@ class WPDB_DAO implements DaoConnectorInterface
      */
     public function get_tablename(?string $tablename = null): ?string
     {
-        global $wpdb;
 
-        $tablename  = $wpdb->prefix . $this->prefix . ($tablename ?? $this->table);
+
+        $tablename  = $this->db->prefix . $this->prefix . ($tablename ?? $this->table);
         return $tablename;
     }
 
@@ -236,16 +314,16 @@ class WPDB_DAO implements DaoConnectorInterface
     /**
      * get primary_key
      * 
-     * create the tablename with the required prefixes
+     * 
      * 
      * @param   string
      * @return  array|null
      * @since   1.0.0
      */
-    protected function get_primary_key(string $table_name): ?array
+    public function get_primary_key(string $table_name): ?array
     {
-        global $wpdb;
-        $schema = $wpdb->get_results(sprintf('DESCRIBE %s', $table_name), ARRAY_A);
+
+        $schema = $this->db->get_results(sprintf('DESCRIBE %s', $table_name), ARRAY_A);
 
         foreach ($schema as $key => $field) {
             if ('PRI' === strtoupper($field['Key'])) {
@@ -268,6 +346,8 @@ class WPDB_DAO implements DaoConnectorInterface
      */
     public function __construct(string $table)
     {
+        global $wpdb;
+        $this->db   = $wpdb;
         $this->table = $table;
     }
 
@@ -280,70 +360,15 @@ class WPDB_DAO implements DaoConnectorInterface
      */
     public function create(array $row): int
     {
-        global $wpdb;
+
 
         $table_name = $this->get_tablename();
 
-        $res        = $wpdb->insert($table_name, $row);
+        $res        = $this->db->insert($table_name, $row);
         if ($res) {
-            return $wpdb->insert_id;
+            return $this->db->insert_id;
         }
         return 0;
-    }
-
-
-    /**
-     * delete row
-     * 
-     * @param   array
-     * @return  bool
-     * @since   1.0.0
-     */
-    public function delete(array $row): bool
-    {
-        return false;
-    }
-
-
-    /**
-     * read row 
-     * 
-     * @param   int|null
-     * @param   int|null
-     * @return  array|null
-     * @since   1.0.0
-     */
-    public function read($id = null, $page = null): ?array
-    {
-        global $wpdb;
-
-        $row            = null;
-        $table_name     = $this->get_tablename();
-        $primary_key    = $this->get_primary_key($table_name);
-
-        if ($id) {
-            $sql = sprintf('SELECT * FROM `%s` WHERE `%s` = %s', $table_name, $primary_key['column'], $primary_key['placeholder']);
-            $sql = $wpdb->prepare($sql, $id);
-            $row    = $wpdb->get_row($sql, ARRAY_A);
-        }
-
-        // echo (__CLASS__ . '->' . __LINE__ . '->' . $sql . '->' . print_r($primary_key, 1));
-        // $res        = $wpdb->insert($table_name, $row);
-        return $row;
-    }
-
-
-    /**
-     * read row by query
-     * 
-     * @param   array
-     * @param   integer
-     * @return  array|null
-     * @since   1.0.0
-     */
-    public function read_by(array $query, $page = null): ?array
-    {
-        return null;
     }
 
 
@@ -358,7 +383,7 @@ class WPDB_DAO implements DaoConnectorInterface
      */
     public function create_table(array $data): ?int
     {
-        global $wpdb;
+
 
         $model  = $this->get_model($data['tablename']);
         $method = array($model, 'create_table');
@@ -368,7 +393,7 @@ class WPDB_DAO implements DaoConnectorInterface
         }
 
         $table_name         = $this->get_tablename($data['tablename']);
-        $wpdb_collate       = $wpdb->collate;
+        $wpdb_collate       = $this->db->collate;
         $columns            =
             $keys           = array();
 
@@ -401,6 +426,200 @@ class WPDB_DAO implements DaoConnectorInterface
 
 
     /**
+     * delete row
+     * 
+     * @param   array
+     * @return  bool
+     * @since   1.0.0
+     */
+    public function delete(array $row): bool
+    {
+        return false;
+    }
+
+
+    /**
+     * get row count
+     * 
+     * get the number of rows in the table
+     * 
+     * @return  int|null
+     * @since   1.0.0
+     */
+    public function get_row_cnt(?array $query = null): ?int
+    {
+        $table_name     = $this->get_tablename();
+        $primary_key    = $this->get_primary_key($table_name);
+
+        if ($query) {
+            $queries    = array();
+            $values     = array();
+
+            if (array_is_list($query)) {
+                foreach ($query as $details) {
+                    $detail = $this->parse_query($details);
+                    if ($detail) {
+                        array_push($queries, $detail);
+                        $value = $this->parse_value($details);
+                        array_push($values, $value);
+                    }
+                }
+            } elseif (is_array($query)) {
+                $detail = $this->parse_query($query);
+                if ($detail) {
+                    array_push($queries, $detail);
+                    $value = $this->parse_value($query);
+                    array_push($values, $value);
+                }
+            }
+
+            $sql = sprintf(
+                'SELECT COUNT(`%1$s`) FROM `%2$s` WHERE %3$s;',
+                $primary_key['column'],
+                $table_name,
+                implode(' OR ', $queries)
+            );
+            $sql    = $this->db->prepare($sql, ...$values);
+        } else {
+            $sql = sprintf('SELECT COUNT(`%1$s`) FROM `%2$s`;', $primary_key['column'], $table_name);
+        }
+
+        $row_cnt    = $this->db->get_var($sql);
+        return $row_cnt;
+    }
+
+
+    /**
+     * read row 
+     * 
+     * @param   int|null
+     * @param   int|null
+     * @param   int|null
+     * @return  array|null
+     * @since   1.0.0
+     */
+    public function read($id = null, ?int  $page = null, ?int  $per_page = null): ?array
+    {
+        $row            = null;
+        $table_name     = $this->get_tablename();
+        $primary_key    = $this->get_primary_key($table_name);
+
+        if ($id) {
+            $sql = sprintf('SELECT * FROM `%s` WHERE `%s` = %s', $table_name, $primary_key['column'], $primary_key['placeholder']);
+            $sql = $this->db->prepare($sql, $id);
+            $row    = $this->db->get_row($sql, ARRAY_A);
+        } else {
+            $row_cnt    = $per_page ?? 10;
+            $sql = sprintf('SELECT * FROM `%s` LIMIT %d, %d;', $table_name, $page * $row_cnt, $row_cnt);
+            $row    = $this->db->get_results($sql, ARRAY_A);
+        }
+
+        // echo (__CLASS__ . '->' . __LINE__ . '->' . $sql . '->'.print_r($row,1));
+        // $res        = $this->db->insert($table_name, $row);
+        return $row;
+    }
+
+    protected function parse_value(array $query)
+    {
+        error_log(__CLASS__ . '->' . __LINE__ . '->' . print_r($query, 1));
+        switch (strtolower($query['comparator'] ?? '')) {
+            case '%like':
+                $value = '%' . $this->db->esc_like($query['value']);
+                break;
+            case '%like%':
+                $value = '%' . $this->db->esc_like($query['value']) . '%';
+                break;
+            case 'like%':
+                $value = $this->db->esc_like($query['value']) . '%';
+                break;
+            default:
+                $value = $query['value'];
+        }
+        return $value;
+    }
+
+    protected function parse_query(array $query): ?string
+    {
+        $columns = $this->get_columns();
+
+        $column     = $query['column'];
+        $comparator = $query['comparator'] ?? '=';
+
+        error_log(__CLASS__ . '->' . __LINE__ . '->' . $columns[$column] . '->' . print_r($query, 1));
+        if ($columns[$column] ?? null) {
+            $placeholder = $columns[$column];
+            switch (strtolower($comparator)) {
+                case 'like%':
+                case '%like':
+                case '%like%':
+                    return sprintf(
+                        '`%s` LIKE %s',
+                        $column,
+                        $placeholder
+                    );
+                default:
+                    return sprintf(
+                        '`%s` %s %s',
+                        $column,
+                        $comparator,
+                        $placeholder
+                    );
+            }
+        }
+        return null;
+    }
+
+
+    /**
+     * read row by query
+     * 
+     * @param   array
+     * @param   integer
+     * @return  array|null
+     * @since   1.0.0
+     */
+    public function read_by(array $query, ?int  $page = null, ?int  $per_page = null): ?array
+    {
+        $queries    = array();
+        $values     = array();
+        if (array_is_list($query)) {
+            foreach ($query as $details) {
+                $detail = $this->parse_query($details);
+                if ($detail) {
+                    array_push($queries, $detail);
+                    $value = $this->parse_value($details);
+                    array_push($values, $value);
+                }
+            }
+        } elseif (is_array($query)) {
+            $detail = $this->parse_query($query);
+            if ($detail) {
+                array_push($queries, $detail);
+                $value = $this->parse_value($query);
+                array_push($values, $value);
+            }
+        }
+
+        $table_name     = $this->get_tablename();
+        $row_cnt    = $per_page ?? 10;
+        $sql = sprintf(
+            'SELECT * FROM %1$s WHERE %2$s LIMIT %3$d, %4$d;',
+            $table_name,
+            implode(' OR ', $queries),
+            $page * $row_cnt,
+            $row_cnt
+        );
+
+        $sql    = $this->db->prepare($sql, ...$values);
+        error_log(__CLASS__ . '->' . __LINE__ . '->' . print_r($values, 1));
+        error_log(__CLASS__ . '->' . __LINE__ . '->' . $sql);
+        $result = $this->db->get_results($sql, ARRAY_A);
+        error_log(__CLASS__ . '->' . __LINE__ . '->' . print_r($result, 1));
+        return $result;
+    }
+
+
+    /**
      * updaterow
      * 
      * @param   array
@@ -409,13 +628,13 @@ class WPDB_DAO implements DaoConnectorInterface
      */
     public function update(array $row): ?int
     {
-        global $wpdb;
+
 
         $row            = null;
         $table_name     = $this->get_tablename();
         $primary_key    = $this->get_primary_key($table_name);
 
-        return $wpdb->update($table_name,$row, array($primary_key['column'] => $row[$primary_key['column']]));
+        return $this->db->update($table_name, $row, array($primary_key['column'] => $row[$primary_key['column']]));
     }
 
 
