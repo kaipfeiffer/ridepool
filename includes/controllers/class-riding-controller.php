@@ -17,13 +17,6 @@ use \Kaipfeiffer\Tramp\Controllers\RidingController;
 
 class Riding_Controller extends Controller_Abstract
 {
-    /**
-     * AJAX_METHODS 
-     * 
-     * list of permitted functions, that can be called via Ajax
-     * all requests to functions that ar not listed here are blocked
-     */
-    const AJAX_METHODS  = array('get');
     
 
     /** 
@@ -42,23 +35,4 @@ class Riding_Controller extends Controller_Abstract
      */
     static protected $tramp_class = null;
 
-
-    /**
-     * get
-     * 
-     * Get-Request
-     * 
-     * @param   array|object	request
-     * @return  array   result für json
-     * @since    1.0.0
-     */
-    public function get($request)
-    {
-        $tramp_class = static::get_tramp_class();
-        if ($tramp_class === null) {
-            return;
-        }
-        
-        return (array('request' => $request, 'method' => __FUNCTION__, 'class' => __CLASS__));
-    }
 }

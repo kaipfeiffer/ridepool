@@ -22,14 +22,14 @@ abstract class Controller_Abstract implements Ajax_Interface
      * list of permitted functions, that can be called via Ajax
      * all requests to functions that ar not listed here are blocked
      */
-    const AJAX_METHODS  = array();
+    const AJAX_METHODS  = array('get', 'post');
 
     /** 
-     * $nonce 
+     * NONCE  
      * 
-     * @var string
+     * nonce for requests
      */
-    private $nonce;
+    const NONCE = '';
 
     /**
      * class that provides database access
@@ -122,6 +122,45 @@ abstract class Controller_Abstract implements Ajax_Interface
 
 
     /**
+     * get_primary_key
+     *
+     * @return array
+     * @since 1.0.0
+     */
+    public static function get_primary_key()
+    {
+        $tramp_class = static::get_tramp_class();
+        if ($tramp_class === null) {
+            error_log(__CLASS__ . '->' . __LINE__ . '->' . print_r('No tramp class found', 1));
+            return;
+        }
+
+        error_log(__CLASS__ . '->' . __LINE__ . '->' . print_r($tramp_class, 1));
+        $primary_key = call_user_func(array($tramp_class, 'get_primary_key'));
+        return $primary_key;
+    }
+
+
+    /**
+     * get_row_cnt
+     *
+     * @return array
+     * @since 1.0.0
+     */
+    public static function get_row_cnt()
+    {
+        $tramp_class = static::get_tramp_class();
+        if ($tramp_class === null) {
+            error_log(__CLASS__ . '->' . __LINE__ . '->' . print_r('No tramp class found', 1));
+            return;
+        }
+
+        $row_cnt = call_user_func(array($tramp_class, 'get_row_cnt'));
+        return $row_cnt;
+    }
+
+
+    /**
      * create
      * 
      * Create row
@@ -152,9 +191,9 @@ abstract class Controller_Abstract implements Ajax_Interface
      * @return  array   result für json
      * @since    1.0.0
      */
-    public function delete($request)
+    public static function delete($request)
     {
-        return (array('request' => $request, 'method' => __FUNCTION__, 'class' => __CLASS__, 'nonce' => $this->nonce));
+        return (array('request' => $request, 'method' => __FUNCTION__, 'class' => __CLASS__, 'nonce' => static::NONCE));
     }
 
 
@@ -168,7 +207,7 @@ abstract class Controller_Abstract implements Ajax_Interface
      * @return  array    result für json
      * @since    1.0.0
      */
-    public static function read($id = null, $page = null)
+    public static function read($id = null, $page = null, $per_page = null)
     {
         $tramp_class = static::get_tramp_class();
         if ($tramp_class === null) {
@@ -177,8 +216,23 @@ abstract class Controller_Abstract implements Ajax_Interface
         }
 
         error_log(__CLASS__ . '->' . __LINE__ . '->' . print_r($tramp_class, 1));
-        $location_columns = call_user_func(array($tramp_class, 'read'), $id, $page);
+        $location_columns = call_user_func(array($tramp_class, 'read'), $id, $page, $per_page);
         return ($location_columns);
+    }
+
+    /**
+     * 
+     */
+    static function search(string $s,?int $page = null,?int $per_page = null)
+    {
+        $tramp_class = static::get_tramp_class();
+        if ($tramp_class === null) {
+            error_log(__CLASS__ . '->' . __LINE__ . '->' . print_r('No tramp class found', 1));
+            return;
+        }
+
+        $rows = call_user_func(array($tramp_class, 'search'), $s, $page, $per_page);
+        return ($rows);
     }
 
 
@@ -191,19 +245,27 @@ abstract class Controller_Abstract implements Ajax_Interface
      * @return  array   result für json
      * @since    1.0.0
      */
-    public function get($request)
+    public static function get($request)
     {
         $tramp_class = static::get_tramp_class();
         if ($tramp_class === null) {
             return;
         }
+        $id = $request['id'] ?? null;
+        if ($id) {
+            $id = intval($id);
+        }
+        $page = $request['page'] ?? null;
+        if ($page) {
+            $page = intval($page);
+        }
 
-        $location_columns = call_user_func(array($tramp_class, 'read'), $request['id']);
+        $location_columns = call_user_func(array($tramp_class, 'read'), $id, $page);
         return (array(
             'request' => $request,
             'method' => __FUNCTION__,
-            'class' => __CLASS__,
-            'nonce' => $this->nonce,
+            'class' => $tramp_class,
+            'nonce' => static::NONCE,
             'result' => $location_columns,
         ));
     }
@@ -233,9 +295,9 @@ abstract class Controller_Abstract implements Ajax_Interface
      * @return  array   result für json
      * @since    1.0.0
      */
-    public function patch($request)
+    public static function patch($request)
     {
-        return (array('request' => $request, 'method' => __FUNCTION__, 'class' => __CLASS__, 'nonce' => $this->nonce));
+        return (array('request' => $request, 'method' => __FUNCTION__, 'class' => __CLASS__, 'nonce' => static::NONCE));
     }
 
 
@@ -248,9 +310,9 @@ abstract class Controller_Abstract implements Ajax_Interface
      * @return  array   result für json
      * @since    1.0.0
      */
-    public function post($request)
+    public static function post($request)
     {
-        return (array('request' => $request, 'method' => __FUNCTION__, 'class' => __CLASS__, 'nonce' => $this->nonce));
+        return (array('request' => $request, 'method' => __FUNCTION__, 'class' => __CLASS__, 'nonce' => static::NONCE));
     }
 
 
@@ -263,9 +325,9 @@ abstract class Controller_Abstract implements Ajax_Interface
      * @return  array   result für json
      * @since    1.0.0
      */
-    public function put($request)
+    public static function put($request)
     {
-        return (array('request' => $request, 'method' => __FUNCTION__, 'class' => __CLASS__, 'nonce' => $this->nonce));
+        return (array('request' => $request, 'method' => __FUNCTION__, 'class' => __CLASS__, 'nonce' => static::NONCE));
     }
 
     /**
