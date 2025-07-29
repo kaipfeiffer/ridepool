@@ -110,7 +110,7 @@ class Entrypoints_Cpt extends Custom_Post_Type_Abstract
 	{
 		add_meta_box(
 			'_sbu_cartlist',
-			__('Eigenschaften', 'sbu_wc_handout'),
+			__('Eigenschaften', 'ridepool'),
 			array(__CLASS__, 'create_view'),
 			self::$post_type,
 			'normal',
@@ -118,7 +118,7 @@ class Entrypoints_Cpt extends Custom_Post_Type_Abstract
 		);
 		add_meta_box(
 			'_sbu_cartlist_data',
-			__('Bestellungen-Daten', 'sbu_wc_handout'),
+			__('Bestellungen-Daten', 'ridepool'),
 			array(__CLASS__, 'create_data_view'),
 			self::$post_type,
 			'normal',
@@ -177,8 +177,8 @@ class Entrypoints_Cpt extends Custom_Post_Type_Abstract
 	public static function get_labels()
 	{
 		return array(
-			'sbu_wc_cart_customer_id'	=> __('Kundennummer', 'sbu_wc_handout'),
-			'sbu_wc_cart_id'			=> __('Entrypointnnummer', 'sbu_wc_handout'),
+			'sbu_wc_cart_customer_id'	=> __('Kundennummer', 'ridepool'),
+			'sbu_wc_cart_id'			=> __('Entrypointnnummer', 'ridepool'),
 		);
 	}
 
